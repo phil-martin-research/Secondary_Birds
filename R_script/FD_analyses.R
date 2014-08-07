@@ -9,10 +9,14 @@
 rm(list=ls())
 library(FD)
 library(RCurl)
+library(plyr)
+library(reshape)
 
 
 dummy$trait #dataframe of 8 functional traits for 8 species
 dummy$abun # matrix of abundance of 8 species in 10 communities
+
+ex<-dbFD(dummy$trait,dummy$abun)
 
 #traits
 #1. diets in form of factors
@@ -30,18 +34,25 @@ x<-getURL("https://raw.githubusercontent.com/PhilAMartin/Secondary_Birds/master/
 species<-read.csv(textConnection(x),header=T)
 names(species)
 
-
 # traits2 - contains only unique rows (1785 species) and traits in binary form
 traits2<-subset(species, !duplicated(Taxon.ID))
 names(traits2)
 rownames(traits2)<-traits2[,2] #set TaxonID as row names
 traits2[,2] <- NULL #remove Taxon ID column
 
+#select just columns that have trait data in
+traits3<-head(traits2)[,c(3:7)]
+
 
 #traits2=x with 7 traits (=food types) with binary code (form 2 - see above)
 
+#create presence absence matrix with site as a row and species as a column
+
+
 #sites2 - presence/absence data
-sites2<-read.csv("Site_PresAb.csv",header=T,check.names=F)
+x2<-getURL("https://raw.githubusercontent.com/PhilAMartin/Secondary_Birds/master/Data/Site_PresAb.csv",ssl.verifypeer = FALSE)
+sites2<-read.csv(textConnection(x2),header=T)
+head(sites2)
 rownames(sites2)<-sites2[,1] #set SiteID as row names
 sites2[,1]<-NULL #remove SiteID column
 
@@ -53,6 +64,18 @@ sites2[,1]<-NULL #remove SiteID column
 #FRic = functional richness
 #FEve = functional eveness
 #FDiv = functional diversity - set calc.FDiv=TRUE.
+
+?dbFD
+head(traits3)
+
+head(sites2)
+
+#the traits data needs flipping around and all data apart from traits need to be removed
+Trait_melt<-melt(traits2)
+head(Trait_melt)
+?cast
+cast(Trait_melt,value~Scientific.name)
+
 
 #2B.1
 dbFD(x=traits2,a=sites2,w.abun=FALSE,calc.FRic=TRUE,calc.FDiv=TRUE)
