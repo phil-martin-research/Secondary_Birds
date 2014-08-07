@@ -3,9 +3,14 @@
 ##################################################################################
 
 
+#I have modified the script a bit while playing around with it. i have tracked the changes and they are here
+#https://github.com/PhilAMartin/Secondary_Birds
+
 rm(list=ls())
 library(FD)
 library(RCurl)
+
+
 dummy$trait #dataframe of 8 functional traits for 8 species
 dummy$abun # matrix of abundance of 8 species in 10 communities
 
@@ -21,7 +26,10 @@ dummy$abun # matrix of abundance of 8 species in 10 communities
 
 setwd("C:/Users/Catherine/Dropbox/Phil & Catherine - Secondary forests/Analysis - Dec 2013")
 # species - contains duplicate rows of species and traits in binary form
-species<-read.csv("Feeding guilds 25.02.14.csv",header=T,check.names=F)
+x<-getURL("https://raw.githubusercontent.com/PhilAMartin/Secondary_Birds/master/Data/Feeding%20guilds%2011.12.13%20v1.csv",ssl.verifypeer = FALSE)
+species<-read.csv(textConnection(x),header=T)
+
+
 names(species)
 # traits2 - contains only unique rows (1785 species) and traits in binary form
 traits2<-subset(species, !duplicated(TaxonID))
