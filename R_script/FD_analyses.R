@@ -24,18 +24,19 @@ dummy$abun # matrix of abundance of 8 species in 10 communities
 #OR
 #B. presence/absence matrix
 
-setwd("C:/Users/Catherine/Dropbox/Phil & Catherine - Secondary forests/Analysis - Dec 2013")
+
 # species - contains duplicate rows of species and traits in binary form
 x<-getURL("https://raw.githubusercontent.com/PhilAMartin/Secondary_Birds/master/Data/Feeding%20guilds%2011.12.13%20v1.csv",ssl.verifypeer = FALSE)
 species<-read.csv(textConnection(x),header=T)
-
-
 names(species)
+
+
 # traits2 - contains only unique rows (1785 species) and traits in binary form
-traits2<-subset(species, !duplicated(TaxonID))
+traits2<-subset(species, !duplicated(Taxon.ID))
 names(traits2)
-rownames(traits2)<-traits2[,1] #set TaxonID as row names
-traits2[,1] <- NULL #remove Taxon ID column
+rownames(traits2)<-traits2[,2] #set TaxonID as row names
+traits2[,2] <- NULL #remove Taxon ID column
+
 
 #traits2=x with 7 traits (=food types) with binary code (form 2 - see above)
 
