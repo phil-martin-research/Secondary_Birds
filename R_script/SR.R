@@ -24,6 +24,9 @@ summary(mSR4)
 # plot mSR3
 df<-data.frame(Age=seq(1,100,0.1))
 df$Prop.SR<-predict(mSR3,newdata=df,level=0)
+
+
+theme_set(theme_bw(base_size=12))
 P1<-ggplot(DataSR,aes(x=Age,y=Prop.SR))+geom_point(size=3,shape=1)+xlab("Secondary forest age (years)")+ylab("Species richness relative to primary forest")
 P2<-P1+geom_line(data=df,size=1.5)+geom_hline(y=1,lty=2)
 P2+theme(panel.grid.major = element_blank(),
