@@ -1,7 +1,8 @@
-DataSR<-read.csv("SF Data SR No Species Groups.csv",header=T)
+DataSR<-read.csv("Data/SF Data SR No Species Groups.csv",header=T)
 names(DataSR) # different than DataSR in original analyses - groups removed
 
 library(nlme)
+library(ggplot2)
 
 plot(DataSR$Age,DataSR$Prop.SR)
 mSR1<-lme(Prop.SR~Age+log(Age)+Dist2,random=(~1|StudyID),method="ML",data=DataSR)
@@ -21,13 +22,17 @@ plot(mSR4)
 summary(mSR4)
 
 # plot mSR3
-max(DataSR$Prop.SR)
-par(mar=c(5,6,2,2))
-plot(DataSR$Age,DataSR$Prop.SR,ylim=c(0,1.4),xlab="Secondary forest age (years)",ylab="Species richness relative to primary forest")
-Ages<-seq(1,100,0.1)
-preds<-0.8673732+(Ages*0.0027354)
-lines(Ages,preds)
-abline(h=1,lty=2)
+df<-data.frame(Age=seq(1,100,0.1))
+df$Prop.SR<-predict(mSR3,newdata=df,level=0)
+P1<-ggplot(DataSR,aes(x=Age,y=Prop.SR))+geom_point(size=3,shape=1)+xlab("Secondary forest age (years)")+ylab("Species richness relative to primary forest")
+P2<-P1+geom_line(data=df,size=1.5)+geom_hline(y=1,lty=2)
+P2+theme(panel.grid.major = element_blank(),
+         panel.grid.minor = element_blank(),
+         panel.border = element_rect(size=1.5,colour="black",fill=NA))
+ggsave(filename = "Figures/Species_richness.pdf",width = 6,height=4,units='in',dpi=400)
+ggsave(filename = "Figures/Species_richness.png",width = 6,height=4,units='in',dpi=400)
+
+
 
 # R2 MuMIn
 
