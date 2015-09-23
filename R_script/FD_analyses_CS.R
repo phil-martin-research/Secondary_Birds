@@ -42,9 +42,12 @@ names(traits2)
 rownames(traits2)<-gsub(" ", ".", traits2$Scientific.name)#set TaxonID as row names
 
 #select just columns that have trait data in
-traits3<-traits2[,c(4:7)]
+traits3<-traits2[,c(4:10)] # EDIT - 4:7 in original - data in 4:10
 traits3<-traits3[order(row.names(traits3)),]
 
+# EDIT - remove Sc and P diet groups
+traits4<-traits2[,c(5:8,10)]
+traits4<-traits4[order(row.names(traits4)),]
 
 #create presence absence matrix with site as a row and species as a column
 
@@ -57,7 +60,7 @@ sites2[,1]<-NULL #remove SiteID column
 #reorder these so that the columns are in ascending alphabetical order 
 sites2<-sites2[,order(names(sites2))]
 #and do the same for traits
-sites2<-sites2[,order(names(sites2))]
+# traits3<-traits3[,order(names(traits3))] # EDIT - removed as done above?
 
 
 #sites2=a with presence abundance data (form B - see above)
@@ -69,15 +72,13 @@ sites2<-sites2[,order(names(sites2))]
 #FEve = functional eveness
 #FDiv = functional diversity - set calc.FDiv=TRUE.
 
-dbFD(x=traits3,a=sites2,w.abun=FALSE,calc.FRic=TRUE,calc.FDiv=F,asym.bin=NULL)
+test<-dbFD(traits4,sites2) # without Sc and P dietary groups
+# test1<-dbFD(traits3,sites2) - with all dietary groups - error
 
-# gives error - add asym.bin (unsure how to apply)
-#2B.2
-dbFD(x=traits2,a=sites2)
-
-,w.abun=FALSE,asym.bin=c(1,2,3,4,5,6,7),calc.FRic=TRUE,calc.FDiv=TRUE)
-# OR are binary traits asymmetric? If not, add asym.bin as null
-dbFD(x=traits2,a=sites2,w.abun=FALSE,asym.bin=NULL,calc.FRic=TRUE,calc.FDiv=TRUE)
-
-#?cannot calculate FDiv or FEve as do not have abundance?
-dbFD(x=traits2,a=sites2,w.abun=FALSE,calc.FRic=TRUE,calc.FDiv=FALSE)
+setwd("C:/Users/Catherine/Dropbox/Phil & Catherine - Secondary forests/Analysis - Dec 2013/R Outputs")
+write.csv(test$FRic,"FRic.csv")
+write.csv(test$FEve,"FEve.csv")
+write.csv(test$FDiv,"FDiv.csv")
+write.csv(test$nbsp,"nbsp.csv")
+write.csv(test$sing.sp,"singsp.csv")
+write.csv(test$qual.FRic,"qual.csv")
