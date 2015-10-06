@@ -137,7 +137,7 @@ P2<-P1+geom_line(data=df,size=1.5)
 P3<-P2+ylab("Functional Evenness relative to primary forest")+xlab("Age of Secondary Forest (Years)")
 P3+theme(panel.grid.major = element_blank(),
          panel.grid.minor = element_blank(),
-         panel.border = element_rect(size=1.5,colour="black",fill=NA))
+         panel.border = element_rect(size=1.5,colour="black",fill=NA))+ geom_hline(linetype="dashed",aes(yintercept=1))
 
 ggsave(filename = "Figures/Fun_ev.pdf",width = 6,height=4,units='in',dpi=400)
 ggsave(filename = "Figures/Fun_ev.png",width = 6,height=4,units='in',dpi=400)
