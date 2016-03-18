@@ -51,24 +51,39 @@ write.csv(FD_comp2,"Data/FD_comp.csv",row.names = F)
 
 
 #now calculate abundance statistics
+#for this I need to produce FD statistics for one site at a time
+#probably best to use a loop to achieve this
+
 Abun2<-subset(Abun,SiteID!=3&SiteID!=4&SiteID!=11&SiteID!=12&SiteID!=24&
                 SiteID!=25&SiteID!=26&SiteID!=36&SiteID!=47&SiteID!=48&
                 SiteID!=53&SiteID!=54&SiteID!=64&SiteID!=65&SiteID!=37&
                 SiteID!=5&SiteID!=6&SiteID!=11&SiteID!=10)#subset to remove sites with incomplete data
-Abun3<-Abun2[-2]#remove column with species codes
 head(Abun3)
+Abun3<-Abun2[-3]#remove column with species codes
 Abun3$Species<-gsub(" ", ".", Abun3$Species, fixed = TRUE)#put dot in between species and genus name
-Abun4<-spread(Abun3,Species,Abundance)#spread data so that each species has a column
-Abun5<-Abun4[-c(1:2)]#remove site number and #NA column
+#for each unique site run this loop once
+Abun3<-subset(Abun3,Species!="#N/A")
+FD_summary<-NULL
+Unique_study<-unique(Abun3$Study)
+for (i in 1:length(Unique_study)){
+  i<-1
+  Abun_sub<-subset(Abun3,SiteID==Unique_sites[i])
+  Abun_sub2<-spread(Abun_sub,Species,Abundance)#spread data so that each species has a column
+  Abun_sub3<-Abun_sub2[,-c(1,2)]#remove site and study number columns
+  Trait_sp2<-data.frame(Species=row.names(Traits3))#create a dataframe with one column containing species names for which we have traits
+  Trait_sp2$Match<-row.names(Traits3) %in% names(Abun_sub3)#mark species as "TRUE" if we have details of them in sites and "FALSE" if we do not
+  remove_sp2<-subset(Trait_sp2,Match=="FALSE")[,1]#produce vector of species to remove from dataset
+  Trait_ab2<-Traits3[-which(rownames(Traits3) %in% remove_sp2), ]#remove species from trait dataset
+  Trait_ab2<-Trait_ab2[order(rownames(Trait_ab2)), ]#order trait dataset so it has the same order as the species dataset
+  FD_calc<-dbFD(Trait_ab2, Abun_sub3, corr="cailliez",w = c(0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,
+                                                      1/7,1/7,1/7,1/7,1/7,1/7,1/7,1,1))
+  str(Trait_ab2)  
+  str(Trait_ab2)
+  FD_site<-data.frame(Site=Unique_sites[i],SpR=FD_calc$nbsp,FRic=FD_calc$FRic,FEve=FD_calc$FEve,FDiv=FD_calc$FDiv,FDis=FD_calc$FDis)
+  FD_summary<-rbind(FD_site,FD_summary)
+  print(i)
+  }
 
-Trait_sp2<-data.frame(Species=row.names(Traits3))#create a dataframe with one column containing species names for which we have traits
-Trait_sp2$Match<-row.names(Traits3) %in% names(Abun5)#mark species as "TRUE" if we have details of them in sites and "FALSE" if we do not
-remove_sp2<-subset(Trait_sp2,Match=="FALSE")[,1]#produce vector of species to remove from dataset
-Trait_ab2<-Traits3[-which(rownames(Traits3) %in% remove_sp2), ]#remove species from trait dataset
-Trait_ab2<-Trait_ab2[order(rownames(Trait_ab2)), ]#order trait dataset so it has the smae order as the species dataset
-#produce fd metrics using relative abundances, giving all four traits a similar weight
-FD_calc<-dbFD(Trait_ab2, Abun5, corr="cailliez",w = c(0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,
-                                                    1/7,1/7,1/7,1/7,1/7,1/7,1/7,1,1))
 
 #now put data into sites
 FD_site<-data.frame(Site.ID=P_ab$Site.ID,FD_calc)
