@@ -58,16 +58,18 @@ Abun2<-subset(Abun,SiteID!=3&SiteID!=4&SiteID!=11&SiteID!=12&SiteID!=24&
                 SiteID!=25&SiteID!=26&SiteID!=36&SiteID!=47&SiteID!=48&
                 SiteID!=53&SiteID!=54&SiteID!=64&SiteID!=65&SiteID!=37&
                 SiteID!=5&SiteID!=6&SiteID!=11&SiteID!=10)#subset to remove sites with incomplete data
-head(Abun3)
 Abun3<-Abun2[-3]#remove column with species codes
 Abun3$Species<-gsub(" ", ".", Abun3$Species, fixed = TRUE)#put dot in between species and genus name
+head(Abun3)
 #for each unique site run this loop once
 Abun3<-subset(Abun3,Species!="#N/A")
 FD_summary<-NULL
 Unique_study<-unique(Abun3$Study)
 for (i in 1:length(Unique_study)){
   i<-1
-  Abun_sub<-subset(Abun3,SiteID==Unique_sites[i])
+  Abun_sub<-subset(Abun3,Study==Unique_study[i])
+  Abun_sub$Abundance<-Abun_sub$Abundance*100
+  Sites<-unique(Abun_sub$SiteID)
   Abun_sub2<-spread(Abun_sub,Species,Abundance)#spread data so that each species has a column
   Abun_sub3<-Abun_sub2[,-c(1,2)]#remove site and study number columns
   Trait_sp2<-data.frame(Species=row.names(Traits3))#create a dataframe with one column containing species names for which we have traits
@@ -77,9 +79,7 @@ for (i in 1:length(Unique_study)){
   Trait_ab2<-Trait_ab2[order(rownames(Trait_ab2)), ]#order trait dataset so it has the same order as the species dataset
   FD_calc<-dbFD(Trait_ab2, Abun_sub3, corr="cailliez",w = c(0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,
                                                       1/7,1/7,1/7,1/7,1/7,1/7,1/7,1,1))
-  str(Trait_ab2)  
-  str(Trait_ab2)
-  FD_site<-data.frame(Site=Unique_sites[i],SpR=FD_calc$nbsp,FRic=FD_calc$FRic,FEve=FD_calc$FEve,FDiv=FD_calc$FDiv,FDis=FD_calc$FDis)
+  FD_site<-data.frame(Site=Sites,Study=Unique_study[i],SpR=FD_calc$nbsp,FRic=FD_calc$FRic,FEve=FD_calc$FEve,FDiv=FD_calc$FDiv,FDis=FD_calc$FDis)
   FD_summary<-rbind(FD_site,FD_summary)
   print(i)
   }
