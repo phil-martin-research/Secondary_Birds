@@ -1,5 +1,7 @@
 #this script calculates species richness and functional diversity metrics needed for paper
 
+#notes - need to calculate changes in evenness and data on individual traits (e.g. Body size)
+
 rm(list=ls())
 
 library(FD)
@@ -49,19 +51,6 @@ write.csv(FD_comp2,"Data/FD_comp.csv",row.names = F)
 
 
 #now calculate abundance statistics
-P_ab2<-P_ab[-1]#remove column indicate site number
-row.names(Traits)<-gsub(" ", ".", Traits$Scientific.Name, fixed = TRUE)#put dot in between species and genus name
-Traits2<-Traits[-c(1:4)]#remove columns that are not needed from trait file
-Traits3<-data.matrix(Traits2)#convert trait data to a data.matrix
-Trait_sp<-data.frame(Species=row.names(Traits3))#create a dataframe with one column containing species names for which we have traits
-Trait_sp$Match<-row.names(Traits3) %in% names(P_ab2)#mark species as "TRUE" if we have details of them in sites and "FALSE" if we do not
-remove_sp<-subset(Trait_sp,Match=="FALSE")[,1]#produce vector of species to remove from dataset
-Traits4<-Traits3[-which(rownames(Traits3) %in% remove_sp), ]#remove species from trait dataset
-FD_calc<-dbFD(Traits4, P_ab2, corr="cailliez",w = c(0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,#produce fd metrics, giving all four traits a similar weight
-                                                    1/7,1/7,1/7,1/7,1/7,1/7,1/7,1,1))
-
-
-
 Abun2<-subset(Abun,SiteID!=3&SiteID!=4&SiteID!=11&SiteID!=12&SiteID!=24&
                 SiteID!=25&SiteID!=26&SiteID!=36&SiteID!=47&SiteID!=48&
                 SiteID!=53&SiteID!=54&SiteID!=64&SiteID!=65&SiteID!=37&
@@ -78,12 +67,8 @@ remove_sp2<-subset(Trait_sp2,Match=="FALSE")[,1]#produce vector of species to re
 Trait_ab2<-Traits3[-which(rownames(Traits3) %in% remove_sp2), ]#remove species from trait dataset
 Trait_ab2<-Trait_ab2[order(rownames(Trait_ab2)), ]#order trait dataset so it has the smae order as the species dataset
 #produce fd metrics using relative abundances, giving all four traits a similar weight
-
 FD_calc<-dbFD(Trait_ab2, Abun5, corr="cailliez",w = c(0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,
                                                     1/7,1/7,1/7,1/7,1/7,1/7,1/7,1,1))
-
-ddply(Abun3,.(SiteID),summarise,Total=sum(Abundance))
-
 
 #now put data into sites
 FD_site<-data.frame(Site.ID=P_ab$Site.ID,FD_calc)
