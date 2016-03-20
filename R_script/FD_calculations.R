@@ -5,6 +5,7 @@
 rm(list=ls())
 
 library(FD)
+library(fundiv)
 library(ggplot2)
 library(plyr)
 library(dplyr)
@@ -64,12 +65,12 @@ head(Abun3)
 #for each unique site run this loop once
 Abun3<-subset(Abun3,Species!="#N/A")
 FD_summary<-NULL
-Unique_study<-unique(Abun3$Study)
+Unique_site<-unique(Abun3$Study)
 for (i in 1:length(Unique_study)){
-  i<-1
-  Abun_sub<-subset(Abun3,Study==Unique_study[i])
+  i<-2
+  Abun_sub<-subset(Abun3,Study==Unique_site[i])
+  Study<-unique(Abun_sub$Study)
   Abun_sub$Abundance<-Abun_sub$Abundance*100
-  Sites<-unique(Abun_sub$SiteID)
   Abun_sub2<-spread(Abun_sub,Species,Abundance)#spread data so that each species has a column
   Abun_sub3<-Abun_sub2[,-c(1,2)]#remove site and study number columns
   Trait_sp2<-data.frame(Species=row.names(Traits3))#create a dataframe with one column containing species names for which we have traits
@@ -79,7 +80,10 @@ for (i in 1:length(Unique_study)){
   Trait_ab2<-Trait_ab2[order(rownames(Trait_ab2)), ]#order trait dataset so it has the same order as the species dataset
   FD_calc<-dbFD(Trait_ab2, Abun_sub3, corr="cailliez",w = c(0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,
                                                       1/7,1/7,1/7,1/7,1/7,1/7,1/7,1,1))
-  FD_site<-data.frame(Site=Sites,Study=Unique_study[i],SpR=FD_calc$nbsp,FRic=FD_calc$FRic,FEve=FD_calc$FEve,FDiv=FD_calc$FDiv,FDis=FD_calc$FDis)
+  
+  FD_dendro(S=Trait_ab2, A=Abun_sub3,Cluster.method = "average", ord = "podani",Weigthedby = "abundance")
+  
+  FD_site<-data.frame(Site=Unique_site[i],Study=Study,SpR=FD_calc$nbsp,FRic=FD_calc$FRic,FEve=FD_calc$FEve,FDiv=FD_calc$FDiv,FDis=FD_calc$FDis)
   FD_summary<-rbind(FD_site,FD_summary)
   print(i)
   }
