@@ -58,8 +58,6 @@ for (i in 1:length(Unique_site)){
 
 
 
-FD_calc<-dbFD(Traits4, P_ab2, corr="cailliez",w = c(0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,#produce fd metrics, giving all four traits a similar weight
-                                                    1/7,1/7,1/7,1/7,1/7,1/7,1/7,1,1))
 
 #now put data into sites
 FD_site<-data.frame(Site.ID=P_ab$Site.ID,FD_calc)
@@ -75,88 +73,7 @@ FD_comp$FE_comp<-log(FD_comp$FEve.x)-log(FD_comp$FEve.y)
 FD_comp$FDiv_comp<-log(FD_comp$FDiv.x)-log(FD_comp$FDiv.y)
 FD_comp$FDis_comp<-log(FD_comp$FDis.x)-log(FD_comp$FDis.y)
 
-
-FD_comp2<-(FD_comp[-c(2:29,31,37,39:40,42,44,48:77)])
 colnames(FD_comp2)<-c("StudyID","Age","Cont_F","Point_obs","Mist_nets","Transect","Vocal","No_Methods","nspb_P","FRic_P","FEve_P","FDiv_P",
                       "FDis_P","SpR_comp","FR_comp","FE_comp","FDiv_comp","FDis_comp")
 
 write.csv(FD_comp2,"Data/FD_comp.csv",row.names = F)
-
-
-#now calculate abundance statistics
-#for this I need to produce FD statistics for one site at a time
-#probably best to use a loop to achieve this
-
-Abun2<-subset(Abun,SiteID!=3&SiteID!=4&SiteID!=11&SiteID!=12&SiteID!=24&
-                SiteID!=25&SiteID!=26&SiteID!=36&SiteID!=47&SiteID!=48&
-                SiteID!=53&SiteID!=54&SiteID!=64&SiteID!=65&&SiteID!=31&SiteID!=37&
-                SiteID!=5&SiteID!=6&SiteID!=11&SiteID!=10)#subset to remove sites with incomplete data
-Abun3<-Abun2[-3]#remove column with species codes
-Abun3$Species<-gsub(" ", ".", Abun3$Species, fixed = TRUE)#put dot in between species and genus name
-head(Abun3)
-#for each unique site run this loop once
-#this loop calculates convex hull based FD metrics
-#as well as the distance based metrics proposed my Petchy and Gaston (2003)
-Abun3<-subset(Abun3,Species!="#N/A")
-FD_summary<-NULL
-Unique_site<-unique(Abun3$SiteID)
-for (i in 1:length(Unique_site)){
-#for (i in 1:10){
-  i<-19
-  Abun_sub<-subset(Abun3,SiteID==Unique_site[i])
-  Study<-unique(Abun_sub$Study)
-  Abun_sub$Abundance<-Abun_sub$Abundance*100
-  is.na(Abun_sub$Abundance)<-0
-  Abun_sub<-subset(Abun_sub,Abundance>0)
-  Abun_sub2<-spread(Abun_sub,Species,Abundance)#spread data so that each species has a column
-  Abun_sub3<-Abun_sub2[,-c(1,2)]#remove site and study number columns
-  ncol(Abun_sub3)
-  Trait_sp2<-data.frame(Species=row.names(Traits3))#create a dataframe with one column containing species names for which we have traits
-  Trait_sp2$Match<-row.names(Traits3) %in% names(Abun_sub3)#mark species as "TRUE" if we have details of them in sites and "FALSE" if we do not
-  remove_sp2<-subset(Trait_sp2,Match=="FALSE")[,1]#produce vector of species to remove from dataset
-  Trait_ab2<-Traits3[-which(rownames(Traits3) %in% remove_sp2), ]#remove species from trait dataset
-  Trait_ab2<-Trait_ab2[order(rownames(Trait_ab2)), ]#order trait dataset so it has the same order as the species dataset
-  nrow(Trait_ab2)
-  FD_calc<-dbFD(Trait_ab2, Abun_sub3, corr="cailliez",w = c(0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,
-                                                      1/7,1/7,1/7,1/7,1/7,1/7,1/7,1,1))
-  FD_dendro_summary<-FD_dendro(S=Trait_ab2, A=Abun_sub3,Cluster.method = "average", ord = "podani",Weigthedby = "abundance")
-  
-  FD_site<-data.frame(Site=Unique_site[i],Study=Study,SpR=FD_calc$nbsp,FRic=FD_calc$FRic,
-                      FEve=FD_calc$FEve,FDiv=FD_calc$FDiv,FDis=FD_calc$FDis,
-                      FDpg=FD_dendro_summary$FDpg,FDw=FD_dendro_summary$FDw,
-                      FDwcomm=FD_dendro_summary$FDwcomm,qual.FD=FD_dendro_summary$qual.FD)
-  FD_summary<-rbind(FD_site,FD_summary)
-  print(i)
-}
-
-
-FD_melt<-melt(FD_summary,id.vars=c("Site","Study","SpR"))
-ggplot(FD_melt,aes(x=SpR,y=value))+geom_point()+facet_wrap(~variable,scale="free_y")+geom_smooth(method="lm")
-
-
-
-#now put data into sites
-FD_site<-data.frame(Site.ID=P_ab$Site.ID,FD_calc)
-Studies<-read.csv("Data/Studies.csv")
-FD_site2<-merge(FD_site,Studies,by.x="Site.ID",by.y="SiteID")
-SF_FD<-subset(FD_site2,PF_SF=="SF")
-PF_FD<-subset(FD_site2,PF_SF=="PF")
-FD_comp<-merge(SF_FD,PF_FD,by="StudyID")
-colnames(FD_comp)
-FD_comp$SpR_comp<-log(FD_comp$nbsp.x)-log(FD_comp$nbsp.y)
-FD_comp$FR_comp<-log(FD_comp$FRic.x)-log(FD_comp$FRic.y)
-FD_comp$FE_comp<-log(FD_comp$FEve.x)-log(FD_comp$FEve.y)
-FD_comp$FDiv_comp<-log(FD_comp$FDiv.x)-log(FD_comp$FDiv.y)
-FD_comp$FDis_comp<-log(FD_comp$FDis.x)-log(FD_comp$FDis.y)
-
-ggplot(FD_comp,aes(x=nbsp.y,y=SpR_comp))+geom_point()+geom_smooth(method="lm",group=NA)
-ggplot(FD_comp,aes(x=Age.x,y=FR_comp))+geom_point()+geom_smooth(method="lm",group=NA)
-ggplot(FD_comp,aes(x=Age.x,y=FE_comp))+geom_point()+geom_smooth(method="lm",group=NA)
-ggplot(FD_comp,aes(x=Age.x,y=FDiv_comp))+geom_point()+geom_smooth(method="lm",group=NA)
-ggplot(FD_comp,aes(x=Age.x,y=FDis_comp))+geom_point()+geom_smooth(method="lm",group=NA)
-
-colnames(FD_comp)
-
-FD_comp2<-(FD_comp[-c(2:29,31,37,39:40,42,44,48:77)])
-colnames(FD_comp2)<-c("StudyID","Age","Cont_F","Point_obs","Mist_nets","Transect","Vocal","No_Methods","nspb_P","FRic_P","FEve_P","FDiv_P",
-                      "FDis_P","SpR_comp","FR_comp","FE_comp","FDiv_comp","FDis_comp")
