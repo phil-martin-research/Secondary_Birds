@@ -11,21 +11,53 @@ library(plyr)
 library(dplyr)
 library(tidyr)
 library(GGally)
+library(reshape)
 
 #load in data
-P_ab<-read.csv("Data/Site_PresAb.csv")
-Abun<-read.csv("Data/Site_Abun3.csv")
+P_ab<-read.csv("Data/Site_PresAb2.csv")
+Abun<-read.csv("Data/Site_Abun4.csv")
 Traits<-read.csv("Data/Bird_traits.csv")
 
 #first calculate presence/absence statistics
-P_ab2<-P_ab[-1]#remove column indicate site number
+
+#produce a loop to calculate statistics for each study one at a time
+#for this I need to calculate the FD statistics as well as Petchy and Gaston's FD
+
 row.names(Traits)<-gsub(" ", ".", Traits$Scientific.Name, fixed = TRUE)#put dot in between species and genus name
 Traits2<-Traits[-c(1:4)]#remove columns that are not needed from trait file
 Traits3<-data.matrix(Traits2)#convert trait data to a data.matrix
-Trait_sp<-data.frame(Species=row.names(Traits3))#create a dataframe with one column containing species names for which we have traits
-Trait_sp$Match<-row.names(Traits3) %in% names(P_ab2)#mark species as "TRUE" if we have details of them in sites and "FALSE" if we do not
-remove_sp<-subset(Trait_sp,Match=="FALSE")[,1]#produce vector of species to remove from dataset
-Traits4<-Traits3[-which(rownames(Traits3) %in% remove_sp), ]#remove species from trait dataset
+
+
+Unique_study<-unique(P_ab$Study)
+
+for (i in 1:length(Unique_site)){
+  i<-1
+  PA_sub<-subset(P_ab,Study==Unique_study[i])
+  Sites<-unique(PA_sub$Site.ID)
+  Study<-Unique_study[i]
+  PA_sub2<-PA_sub[-c(1:2)]#remove columns that indicate site and study number
+  keeps<-colSums(PA_sub2)>0#get rid of species which are not present in local species pool
+  PA_sub3<-PA_sub2[,keeps]
+  PA_sub3<-PA_sub3[ , order(names(PA_sub3))]#order columns for species alphabetically
+  Trait_sp2<-data.frame(Species=row.names(Traits3))#create a dataframe with one column containing species names for which we have traits
+  Trait_sp2$Match<-row.names(Traits3) %in% names(PA_sub3)#mark species as "TRUE" if we have details of them in sites and "FALSE" if we do not
+  remove_sp2<-subset(Trait_sp2,Match=="FALSE")[,1]#produce vector of species to remove from dataset
+  Trait_ab2<-Traits3[-which(rownames(Traits3) %in% remove_sp2), ]#remove species from trait dataset
+  Trait_ab2<-Trait_ab2[order(rownames(Trait_ab2)), ]#order trait dataset so it has the same order as the species dataset
+  FD_calc<-dbFD(Trait_ab2, PA_sub3, corr="cailliez",w = c(0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,
+                                                            1/7,1/7,1/7,1/7,1/7,1/7,1/7,1,1))
+  FD_dendro_summary<-FD_dendro(S=Trait_ab2, A=PA_sub3,Cluster.method = "average", ord = "podani",Weigthedby = "abundance")
+  
+  FD_site<-data.frame(Site=Unique_site[i],Study=Study,SpR=FD_calc$nbsp,FRic=FD_calc$FRic,
+                      FEve=FD_calc$FEve,FDiv=FD_calc$FDiv,FDis=FD_calc$FDis,
+                      FDpg=FD_dendro_summary$FDpg,FDw=FD_dendro_summary$FDw,
+                      FDwcomm=FD_dendro_summary$FDwcomm,qual.FD=FD_dendro_summary$qual.FD)
+  FD_summary<-rbind(FD_site,FD_summary)
+  print(i)
+}
+
+
+
 FD_calc<-dbFD(Traits4, P_ab2, corr="cailliez",w = c(0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,#produce fd metrics, giving all four traits a similar weight
                                                     1/7,1/7,1/7,1/7,1/7,1/7,1/7,1,1))
 
@@ -57,7 +89,7 @@ write.csv(FD_comp2,"Data/FD_comp.csv",row.names = F)
 
 Abun2<-subset(Abun,SiteID!=3&SiteID!=4&SiteID!=11&SiteID!=12&SiteID!=24&
                 SiteID!=25&SiteID!=26&SiteID!=36&SiteID!=47&SiteID!=48&
-                SiteID!=53&SiteID!=54&SiteID!=64&SiteID!=65&SiteID!=37&
+                SiteID!=53&SiteID!=54&SiteID!=64&SiteID!=65&&SiteID!=31&SiteID!=37&
                 SiteID!=5&SiteID!=6&SiteID!=11&SiteID!=10)#subset to remove sites with incomplete data
 Abun3<-Abun2[-3]#remove column with species codes
 Abun3$Species<-gsub(" ", ".", Abun3$Species, fixed = TRUE)#put dot in between species and genus name
@@ -68,19 +100,23 @@ head(Abun3)
 Abun3<-subset(Abun3,Species!="#N/A")
 FD_summary<-NULL
 Unique_site<-unique(Abun3$SiteID)
-for (i in 1:length(Unique_study)){
-  i<-1
+for (i in 1:length(Unique_site)){
+#for (i in 1:10){
+  i<-19
   Abun_sub<-subset(Abun3,SiteID==Unique_site[i])
   Study<-unique(Abun_sub$Study)
   Abun_sub$Abundance<-Abun_sub$Abundance*100
+  is.na(Abun_sub$Abundance)<-0
+  Abun_sub<-subset(Abun_sub,Abundance>0)
   Abun_sub2<-spread(Abun_sub,Species,Abundance)#spread data so that each species has a column
   Abun_sub3<-Abun_sub2[,-c(1,2)]#remove site and study number columns
-  Abun_sub3[is.na(Abun_sub3)] <- 0
+  ncol(Abun_sub3)
   Trait_sp2<-data.frame(Species=row.names(Traits3))#create a dataframe with one column containing species names for which we have traits
   Trait_sp2$Match<-row.names(Traits3) %in% names(Abun_sub3)#mark species as "TRUE" if we have details of them in sites and "FALSE" if we do not
   remove_sp2<-subset(Trait_sp2,Match=="FALSE")[,1]#produce vector of species to remove from dataset
   Trait_ab2<-Traits3[-which(rownames(Traits3) %in% remove_sp2), ]#remove species from trait dataset
   Trait_ab2<-Trait_ab2[order(rownames(Trait_ab2)), ]#order trait dataset so it has the same order as the species dataset
+  nrow(Trait_ab2)
   FD_calc<-dbFD(Trait_ab2, Abun_sub3, corr="cailliez",w = c(0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,
                                                       1/7,1/7,1/7,1/7,1/7,1/7,1/7,1,1))
   FD_dendro_summary<-FD_dendro(S=Trait_ab2, A=Abun_sub3,Cluster.method = "average", ord = "podani",Weigthedby = "abundance")
@@ -91,8 +127,11 @@ for (i in 1:length(Unique_study)){
                       FDwcomm=FD_dendro_summary$FDwcomm,qual.FD=FD_dendro_summary$qual.FD)
   FD_summary<-rbind(FD_site,FD_summary)
   print(i)
-  }
+}
 
+
+FD_melt<-melt(FD_summary,id.vars=c("Site","Study","SpR"))
+ggplot(FD_melt,aes(x=SpR,y=value))+geom_point()+facet_wrap(~variable,scale="free_y")+geom_smooth(method="lm")
 
 
 
