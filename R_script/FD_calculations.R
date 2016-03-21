@@ -26,60 +26,40 @@ row.names(Traits)<-gsub(" ", ".", Traits$Scientific.Name, fixed = TRUE)#put dot 
 Traits2<-Traits[-c(1:4)]#remove columns that are not needed from trait file
 Traits3<-data.matrix(Traits2)#convert trait data to a data.matrix
 
-#creat a list of all the studies we are using
+#create a list of all the studies we are using
 Unique_study<-unique(P_ab$Study)
 
 #first calculate presence/absence statistics
-i<-1
-P_ab2<-P_ab[-c(1,2)]#remove column indicate site number
-ncol(P_ab)
-head(P_ab)[1:3]
-PA2<-subset(P_ab,Study==Unique_study[i])
-PA2_2<-PA2[-c(1,2)]#remove column indicate site number
-keeps<-colSums(PA2_2)>0#get rid of species which are not present in local species pool
-PA2_3<-PA2_2[,keeps]
-PA2_3<-PA2_3[ , order(names(PA2_3))]
-PA2_4<-PA2_3[,-c(1:20)]
-
-names(PA2_4)
-
-row.names(Traits)<-gsub(" ", ".", Traits$Scientific.Name, fixed = TRUE)#put dot in between species and genus name
-Traits2<-Traits[-c(1:4)]#remove columns that are not needed from trait file
-Traits3<-data.matrix(Traits2)#convert trait data to a data.matrix
-Trait_sp<-data.frame(Species=row.names(Traits3))#create a dataframe with one column containing species names for which we have traits
-Trait_sp$Match<-row.names(Traits3) %in% names(PA2_4)#mark species as "TRUE" if we have details of them in sites and "FALSE" if we do not
-remove_sp<-subset(Trait_sp,Match=="FALSE")[,1]#produce vector of species to remove from dataset
-Traits4<-Traits3[-which(rownames(Traits3) %in% remove_sp), ]#remove species from trait dataset
-Traits4<-Traits4[order(rownames(Traits4)), ]
-FD_calc<-dbFD(Traits4, PA2_4, corr="cailliez",w = c(0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,#produce fd metrics, giving all four traits a similar weight
-                                                    1/7,1/7,1/7,1/7,1/7,1/7,1/7,1,1))
+#for the moment this is only using Petchy and GAston's method
+#it might eb useful to come up with another method to calculate functional diversity
+FD_summary<-NULL
 Unique_study<-unique(P_ab$Study)
-
-for (i in 1:length(Unique_site)){
-  i<-1
+for (i in 1:length(Unique_study)){
   PA_sub<-subset(P_ab,Study==Unique_study[i])
   Sites<-unique(PA_sub$Site.ID)
-  Study<-Unique_study[i]
   PA_sub2<-PA_sub[-c(1:2)]#remove columns that indicate site and study number
   keeps<-colSums(PA_sub2)>0#get rid of species which are not present in local species pool
   PA_sub3<-PA_sub2[,keeps]
   PA_sub3<-PA_sub3[ , order(names(PA_sub3))]#order columns for species alphabetically
+  ncol(PA_sub3)
+  names(PA_sub3)
   Trait_sp2<-data.frame(Species=row.names(Traits3))#create a dataframe with one column containing species names for which we have traits
   Trait_sp2$Match<-row.names(Traits3) %in% names(PA_sub3)#mark species as "TRUE" if we have details of them in sites and "FALSE" if we do not
   remove_sp2<-subset(Trait_sp2,Match=="FALSE")[,1]#produce vector of species to remove from dataset
   Trait_ab2<-Traits3[-which(rownames(Traits3) %in% remove_sp2), ]#remove species from trait dataset
   Trait_ab2<-Trait_ab2[order(rownames(Trait_ab2)), ]#order trait dataset so it has the same order as the species dataset
-  FD_calc<-dbFD(Trait_ab2, PA_sub3, corr="cailliez",w = c(0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,
-                                                            1/7,1/7,1/7,1/7,1/7,1/7,1/7,1,1))
   FD_dendro_summary<-FD_dendro(S=Trait_ab2, A=PA_sub3,Cluster.method = "average", ord = "podani",Weigthedby = "abundance")
-  
-  FD_site<-data.frame(Site=Unique_site[i],Study=Study,SpR=FD_calc$nbsp,FRic=FD_calc$FRic,
-                      FEve=FD_calc$FEve,FDiv=FD_calc$FDiv,FDis=FD_calc$FDis,
-                      FDpg=FD_dendro_summary$FDpg,FDw=FD_dendro_summary$FDw,
-                      FDwcomm=FD_dendro_summary$FDwcomm,qual.FD=FD_dendro_summary$qual.FD)
+  FD_summary<-dbFD(Trait_ab2, PA_sub3, corr="sqrt",w = c(0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,#produce fd metrics, giving all four traits a similar weight
+                  1/7,1/7,1/7,1/7,1/7,1/7,1/7,1,1),w.abun = FALSE,calc.FRic=T,m=10)
+  names(FD_summary)
+  FD_site<-data.frame(Site=Sites,Study=Unique_study[i],SpR=FD_dendro_summary$n_sp,FDpg=FD_dendro_summary$FDpg,
+                      FRic=FD_summary$FRic,qual_FRic=FD_summary$qual.FRic,FEve=FD_summary$FEve,
+                      FDis=FD_summary$FDis,RaoQ=FD_summary$RaoQ)
   FD_summary<-rbind(FD_site,FD_summary)
   print(i)
 }
+
+ggplot(FD_summary,aes(x=SpR,y=FDpg))+geom_point()
 
 
 #now put data into sites
