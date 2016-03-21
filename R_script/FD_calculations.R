@@ -63,12 +63,14 @@ Abun3<-Abun2[-3]#remove column with species codes
 Abun3$Species<-gsub(" ", ".", Abun3$Species, fixed = TRUE)#put dot in between species and genus name
 head(Abun3)
 #for each unique site run this loop once
+#this loop calculates convex hull based FD metrics
+#as well as the distance based metrics proposed my Petchy and Gaston (2003)
 Abun3<-subset(Abun3,Species!="#N/A")
 FD_summary<-NULL
-Unique_site<-unique(Abun3$Study)
+Unique_site<-unique(Abun3$SiteID)
 for (i in 1:length(Unique_study)){
   i<-1
-  Abun_sub<-subset(Abun3,Study==Unique_site[i])
+  Abun_sub<-subset(Abun3,SiteID==Unique_site[i])
   Study<-unique(Abun_sub$Study)
   Abun_sub$Abundance<-Abun_sub$Abundance*100
   Abun_sub2<-spread(Abun_sub,Species,Abundance)#spread data so that each species has a column
@@ -81,35 +83,16 @@ for (i in 1:length(Unique_study)){
   Trait_ab2<-Trait_ab2[order(rownames(Trait_ab2)), ]#order trait dataset so it has the same order as the species dataset
   FD_calc<-dbFD(Trait_ab2, Abun_sub3, corr="cailliez",w = c(0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,
                                                       1/7,1/7,1/7,1/7,1/7,1/7,1/7,1,1))
+  FD_dendro_summary<-FD_dendro(S=Trait_ab2, A=Abun_sub3,Cluster.method = "average", ord = "podani",Weigthedby = "abundance")
   
-  FD_dendro(S=Trait_ab2, A=Abun_sub3,Cluster.method = "average", ord = "podani",Weigthedby = "abundance")
-  
-  FD_site<-data.frame(Site=Unique_site[i],Study=Study,SpR=FD_calc$nbsp,FRic=FD_calc$FRic,FEve=FD_calc$FEve,FDiv=FD_calc$FDiv,FDis=FD_calc$FDis)
+  FD_site<-data.frame(Site=Unique_site[i],Study=Study,SpR=FD_calc$nbsp,FRic=FD_calc$FRic,
+                      FEve=FD_calc$FEve,FDiv=FD_calc$FDiv,FDis=FD_calc$FDis,
+                      FDpg=FD_dendro_summary$FDpg,FDw=FD_dendro_summary$FDw,
+                      FDwcomm=FD_dendro_summary$FDwcomm,qual.FD=FD_dendro_summary$qual.FD)
   FD_summary<-rbind(FD_site,FD_summary)
   print(i)
   }
 
-
-Abun_sub<-Abun3
-Abun_sub$Abundance<-Abun_sub$Abundance*100
-Abun_sub2<-spread(Abun_sub,Species,Abundance)#spread data so that each species has a column
-Abun_sub3<-Abun_sub2[,-c(1,2)]#remove site and study number columns
-Abun_sub3[is.na(Abun_sub3)] <- 0
-Trait_sp2<-data.frame(Species=row.names(Traits3))#create a dataframe with one column containing species names for which we have traits
-Trait_sp2$Match<-row.names(Traits3) %in% names(Abun_sub3)#mark species as "TRUE" if we have details of them in sites and "FALSE" if we do not
-remove_sp2<-subset(Trait_sp2,Match=="FALSE")[,1]#produce vector of species to remove from dataset
-Trait_ab2<-Traits3[-which(rownames(Traits3) %in% remove_sp2), ]#remove species from trait dataset
-Trait_ab2<-Trait_ab2[order(rownames(Trait_ab2)), ]#order trait dataset so it has the same order as the species dataset
-head(Trait_ab2)
-Trait_ab3<-Trait_ab2
-
-
-
-FD_dendrogram_summary<-FD_dendro(S=Trait_ab3, A=Abun_sub3,Cluster.method = "average", ord = "podani",Weigthedby = "abundance")
-
-FD_site<-data.frame(Site=Unique_site[i],Study=Study,SpR=FD_calc$nbsp,FRic=FD_calc$FRic,FEve=FD_calc$FEve,FDiv=FD_calc$FDiv,FDis=FD_calc$FDis)
-FD_summary<-rbind(FD_site,FD_summary)
-print(i)
 
 
 
