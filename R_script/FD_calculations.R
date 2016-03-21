@@ -15,7 +15,6 @@ library(reshape)
 
 #load in data
 P_ab<-read.csv("Data/Site_PresAb2.csv")
-Abun<-read.csv("Data/Site_Abun4.csv")
 Traits<-read.csv("Data/Bird_traits.csv")
 
 #first calculate presence/absence statistics
@@ -27,8 +26,26 @@ row.names(Traits)<-gsub(" ", ".", Traits$Scientific.Name, fixed = TRUE)#put dot 
 Traits2<-Traits[-c(1:4)]#remove columns that are not needed from trait file
 Traits3<-data.matrix(Traits2)#convert trait data to a data.matrix
 
-
+#creat a list of all the studies we are using
 Unique_study<-unique(P_ab$Study)
+
+#first calculate presence/absence statistics
+P_ab2<-P_ab[-c(1,2)]#remove column indicate site number
+PA2<-subset(P_ab,Study==Unique_study[i])
+P_ab2<-PA2[-c(1,2)]#remove column indicate site number
+keeps<-colSums(P_ab2)>0#get rid of species which are not present in local species pool
+P_ab2<-P_ab2[,keeps]
+
+row.names(Traits)<-gsub(" ", ".", Traits$Scientific.Name, fixed = TRUE)#put dot in between species and genus name
+Traits2<-Traits[-c(1:4)]#remove columns that are not needed from trait file
+Traits3<-data.matrix(Traits2)#convert trait data to a data.matrix
+Trait_sp<-data.frame(Species=row.names(Traits3))#create a dataframe with one column containing species names for which we have traits
+Trait_sp$Match<-row.names(Traits3) %in% names(P_ab2)#mark species as "TRUE" if we have details of them in sites and "FALSE" if we do not
+remove_sp<-subset(Trait_sp,Match=="FALSE")[,1]#produce vector of species to remove from dataset
+Traits4<-Traits3[-which(rownames(Traits3) %in% remove_sp), ]#remove species from trait dataset
+FD_calc<-dbFD(Traits4, P_ab2, corr="cailliez",w = c(0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,#produce fd metrics, giving all four traits a similar weight
+                                                    1/7,1/7,1/7,1/7,1/7,1/7,1/7,1,1))
+
 
 for (i in 1:length(Unique_site)){
   i<-1
