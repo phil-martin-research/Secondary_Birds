@@ -57,8 +57,6 @@ for (i in 1:length(Unique_site)){
 }
 
 
-
-
 #now put data into sites
 FD_site<-data.frame(Site.ID=P_ab$Site.ID,FD_calc)
 Studies<-read.csv("Data/Studies.csv")
