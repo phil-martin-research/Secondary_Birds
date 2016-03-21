@@ -30,22 +30,30 @@ Traits3<-data.matrix(Traits2)#convert trait data to a data.matrix
 Unique_study<-unique(P_ab$Study)
 
 #first calculate presence/absence statistics
+i<-1
 P_ab2<-P_ab[-c(1,2)]#remove column indicate site number
+ncol(P_ab)
+head(P_ab)[1:3]
 PA2<-subset(P_ab,Study==Unique_study[i])
-P_ab2<-PA2[-c(1,2)]#remove column indicate site number
-keeps<-colSums(P_ab2)>0#get rid of species which are not present in local species pool
-P_ab2<-P_ab2[,keeps]
+PA2_2<-PA2[-c(1,2)]#remove column indicate site number
+keeps<-colSums(PA2_2)>0#get rid of species which are not present in local species pool
+PA2_3<-PA2_2[,keeps]
+PA2_3<-PA2_3[ , order(names(PA2_3))]
+PA2_4<-PA2_3[,-c(1:20)]
+
+names(PA2_4)
 
 row.names(Traits)<-gsub(" ", ".", Traits$Scientific.Name, fixed = TRUE)#put dot in between species and genus name
 Traits2<-Traits[-c(1:4)]#remove columns that are not needed from trait file
 Traits3<-data.matrix(Traits2)#convert trait data to a data.matrix
 Trait_sp<-data.frame(Species=row.names(Traits3))#create a dataframe with one column containing species names for which we have traits
-Trait_sp$Match<-row.names(Traits3) %in% names(P_ab2)#mark species as "TRUE" if we have details of them in sites and "FALSE" if we do not
+Trait_sp$Match<-row.names(Traits3) %in% names(PA2_4)#mark species as "TRUE" if we have details of them in sites and "FALSE" if we do not
 remove_sp<-subset(Trait_sp,Match=="FALSE")[,1]#produce vector of species to remove from dataset
 Traits4<-Traits3[-which(rownames(Traits3) %in% remove_sp), ]#remove species from trait dataset
-FD_calc<-dbFD(Traits4, P_ab2, corr="cailliez",w = c(0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,#produce fd metrics, giving all four traits a similar weight
+Traits4<-Traits4[order(rownames(Traits4)), ]
+FD_calc<-dbFD(Traits4, PA2_4, corr="cailliez",w = c(0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,#produce fd metrics, giving all four traits a similar weight
                                                     1/7,1/7,1/7,1/7,1/7,1/7,1/7,1,1))
-
+Unique_study<-unique(P_ab$Study)
 
 for (i in 1:length(Unique_site)){
   i<-1
