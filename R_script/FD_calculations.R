@@ -21,7 +21,6 @@ Traits<-read.csv("Data/Bird_traits.csv")
 
 #produce a loop to calculate statistics for each study one at a time
 #for this I need to calculate the FD statistics as well as Petchy and Gaston's FD
-
 row.names(Traits)<-gsub(" ", ".", Traits$Scientific.Name, fixed = TRUE)#put dot in between species and genus name
 Traits2<-Traits[-c(1:4)]#remove columns that are not needed from trait file
 Traits3<-data.matrix(Traits2)#convert trait data to a data.matrix
@@ -49,12 +48,11 @@ for (i in 1:length(Unique_study)){
   Trait_ab2<-Traits3[-which(rownames(Traits3) %in% remove_sp2), ]#remove species from trait dataset
   Trait_ab2<-Trait_ab2[order(rownames(Trait_ab2)), ]#order trait dataset so it has the same order as the species dataset
   FD_dendro_summary<-FD_dendro(S=Trait_ab2, A=PA_sub3,Cluster.method = "average", ord = "podani",Weigthedby = "abundance")
-  FD_summary<-dbFD(Trait_ab2, PA_sub3, corr="sqrt",w = c(0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,#produce fd metrics, giving all four traits a similar weight
+  FD_summary_study<-dbFD(Trait_ab2, PA_sub3, corr="sqrt",w = c(0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,#produce fd metrics, giving all four traits a similar weight
                   1/7,1/7,1/7,1/7,1/7,1/7,1/7,1,1),w.abun = FALSE,calc.FRic=T,m=10)
-  names(FD_summary)
   FD_site<-data.frame(Site=Sites,Study=Unique_study[i],SpR=FD_dendro_summary$n_sp,FDpg=FD_dendro_summary$FDpg,
-                      FRic=FD_summary$FRic,qual_FRic=FD_summary$qual.FRic,FEve=FD_summary$FEve,
-                      FDis=FD_summary$FDis,RaoQ=FD_summary$RaoQ)
+                      FRic=FD_summary_study$FRic,qual_FRic=FD_summary_study$qual.FRic,FEve=FD_summary_study$FEve,
+                      FDis=FD_summary_study$FDis,RaoQ=FD_summary_study$RaoQ)
   FD_summary<-rbind(FD_site,FD_summary)
   print(i)
 }
