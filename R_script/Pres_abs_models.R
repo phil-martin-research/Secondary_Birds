@@ -82,9 +82,9 @@ Results$LCI<-Results$Mean-(Results$SE*1.96)
 
 #plot results
 theme_set(theme_bw(base_size=12))
-P1<-ggplot(Results,aes(x=Variable,y=Mean,ymax=UCI,ymin=LCI))+geom_pointrange(shape=1,size=0.5)+ylab("Difference between secondary \nand primary forest sites (log response ratio)")+geom_hline(yintercept=0,lty=2)+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+P1<-ggplot(Results,aes(x=Variable,y=Mean,ymax=UCI,ymin=LCI))+geom_point(shape=1,size=3)+ylab("Difference between secondary \nand primary forest sites (log response ratio)")+geom_hline(yintercept=0,lty=2)+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 P2<-P1+theme(panel.grid.major = element_blank(),
          panel.grid.minor = element_blank(),
          panel.border = element_rect(size=1.5,colour="black",fill=NA))
-P2+scale_x_discrete(limits=c("Species richness","Functional diversity - P&G","Functional diversity - Laliberte","Functional dispersion","Functional eveness","Rao's Q"))
+P2+scale_x_discrete(limits=c("Species richness","Functional diversity - P&G","Functional diversity - Laliberte","Functional dispersion","Functional eveness","Rao's Q"))+geom_errorbar(width=0.3)
 ggsave("Figures/Pa_diversity.pdf",width = 6,height =6,units = "in",dpi = 400)
