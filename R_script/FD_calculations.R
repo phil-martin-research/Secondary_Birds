@@ -104,15 +104,10 @@ Traits3<-data.matrix(Traits2)#convert trait data to a data.matrix
 Abun3<-subset(Abun3,Species!="#N/A")
 FD_summary_abun<-NULL
 Unique_study<-unique(Abun3$Study)
+#for (i in 1:length(Unique_study)){ -commented out just for a test of code
 for (i in 1:length(Unique_study)){
-  i<-1
   Abun_sub<-subset(Abun3,Study==Unique_study[i])#subset data so that it is only from one study
-  Study<-unique(Abun_sub[,1:8])#Store info on study ID
-  PF_SF<-Abun_sub$PF_SF#Get info on whether sites are secondary or primary forest
-  nrow(Abun_sub)/2
-  Age<-Abun_sub$Age[c(1,(nrow(Abun_sub)/2)+2)]#get info on site ages
-  Abun_sub$Age
-  Methods<-Abun_sub[,5:8]#get info on the methods used in studies
+  Study_info<-unique(Abun_sub[,1:8])#Store info on study ID
   Abun_sub2<-Abun_sub[-c(3:8)]#remove columns that indicate site, study number, whether they are primary or secondary, and methods used in study
   Abun_sub2$Abundance<-Abun_sub2$Abundance*100
   Abun_sub2<-spread(Abun_sub2,Species,Abundance)#spread data so that each species has a column
@@ -129,7 +124,7 @@ for (i in 1:length(Unique_study)){
   FD_dendro_summary<-FD_dendro(S=Trait_ab2, A=Abun_sub4,Cluster.method = "average", ord = "podani",Weigthedby = "abundance")
   FD_summary_study<-dbFD(Trait_ab2, Abun_sub4, corr="sqrt",w = c(0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,#produce fd metrics, giving all four traits a similar weight
                                                                1/7,1/7,1/7,1/7,1/7,1/7,1/7,1,1),w.abun = T,calc.FRic=T,m=10)
-  FD_site<-data.frame(Site=Sites,Study=Unique_study[i],PF_SF=PF_SF,Age=Age,Methods,SpR=FD_dendro_summary$n_sp,FDpg=FD_dendro_summary$FDpg,
+  FD_site<-data.frame(Study_info,SpR=FD_dendro_summary$n_sp,FDpg=FD_dendro_summary$FDpg,
                       FRic=FD_summary_study$FRic,qual_FRic=FD_summary_study$qual.FRic,FEve=FD_summary_study$FEve,
                       FDiv=FD_summary_study$FDiv,FDis=FD_summary_study$FDis,RaoQ=FD_summary_study$RaoQ)
   FD_site_PF<-subset(FD_site,PF_SF=="PF")#subset to give only primary forest sites
@@ -150,8 +145,6 @@ for (i in 1:length(Unique_study)){
   FD_site_SF$FDiv_comp<-log(FD_site_SF$FDiv)-log(FD_site_PF$FDiv)
   FD_site_SF$FDis_comp<-log(FD_site_SF$FDis)-log(FD_site_PF$FDis)
   FD_site_SF$Rao_comp<-log(FD_site_SF$RaoQ)-log(FD_site_PF$RaoQ)
-  FD_summary<-rbind(FD_site_SF,FD_summary)
-  FD_site<-data.frame(Site=Unique_site[i],Study=Study,SpR=FD_calc$nbsp,FRic=FD_calc$FRic,FEve=FD_calc$FEve,FDiv=FD_calc$FDiv,FDis=FD_calc$FDis)
-  FD_summary<-rbind(FD_site,FD_summary)
+  FD_summary_abun<-rbind(FD_site_SF,FD_summary_abun)
   print(i)
 }
