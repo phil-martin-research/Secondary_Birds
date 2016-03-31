@@ -74,30 +74,7 @@ for (i in 1:length(Unique_study)){
   print(i)
 }
 
-FD_summary_melt<-melt(FD_summary,id.vars=c("Site","Study","SpR","PF_SF"))
-write.csv(FD_summary,"Data/FD_summary.csv",row.names=F)
-
-
-ggplot(FD_summary_melt,aes(x=PF_SF,y=value,colour=PF_SF))+geom_point()+facet_wrap(~variable,scales = "free")+geom_boxplot()
-
-
-#now put data into sites
-SF_FD<-subset(FD_summary,PF_SF=="SF")
-PF_FD<-subset(FD_summary,PF_SF=="PF")
-FD_comp<-merge(SF_FD,PF_FD,by="Study")
-colnames(FD_comp)
-FD_comp$SpR_comp<-log(FD_comp$SpR.x)-log(FD_comp$SpR.y)
-FD_comp$FR_comp<-log(FD_comp$FRic.x)-log(FD_comp$FRic.y)
-FD_comp$FE_comp<-log(FD_comp$FEve.x)-log(FD_comp$FEve.y)
-FD_comp$FDiv_comp<-log(FD_comp$FDiv.x)-log(FD_comp$FDiv.y)
-FD_comp$FDis_comp<-log(FD_comp$FDis.x)-log(FD_comp$FDis.y)
-FD_comp$Rao_comp<-log(FD_comp$RaoQ.x)-log(FD_comp$RaoQ.y)
-
-
-colnames(FD_comp2)<-c("StudyID","Age","Cont_F","Point_obs","Mist_nets","Transect","Vocal","No_Methods","nspb_P","FRic_P","FEve_P","FDiv_P",
-                      "FDis_P","SpR_comp","FR_comp","FE_comp","FDiv_comp","FDis_comp")
-
-write.csv(FD_comp2,"Data/FD_comp.csv",row.names = F)
+write.csv(FD_summary,"Data/FD_summary_comp.csv",row.names=F)
 
 
 #maybe I can try to calculate the abundance based metrics?
