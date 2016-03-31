@@ -34,14 +34,14 @@ Unique_study<-unique(P_ab$Study)
 FD_summary<-NULL
 Unique_study<-unique(P_ab$Study)
 for (i in 1:length(Unique_study)){
-  PA_sub<-subset(P_ab,Study==Unique_study[i])
-  Sites<-unique(PA_sub$Site.ID)
-  PF_SF<-PA_sub$PF_SF
-  Age<-PA_sub$Age
-  Methods<-PA_sub[,5:8]
+  PA_sub<-subset(P_ab,Study==Unique_study[i])#subset data so that it only represents one study
+  Sites<-unique(PA_sub$Site.ID)#get site ID numbers
+  PF_SF<-PA_sub$PF_SF#Get info on whether sites are secondary or primary forest
+  Age<-PA_sub$Age#get info on site ages
+  Methods<-PA_sub[,5:8]#get info on the methods used in studies
   PA_sub2<-PA_sub[-c(1:8)]#remove columns that indicate site, study number, whether they are primary or secondary, and methods used in study
-  keeps<-colSums(PA_sub2)>0#get rid of species which are not present in local species pool
-  PA_sub3<-PA_sub2[,keeps]
+  keeps<-colSums(PA_sub2)>0#identify species not present in local species pool
+  PA_sub3<-PA_sub2[,keeps]#get rid of species which are not present in local species pool
   PA_sub3<-PA_sub3[ , order(names(PA_sub3))]#order columns for species alphabetically
   Trait_sp2<-data.frame(Species=row.names(Traits3))#create a dataframe with one column containing species names for which we have traits
   Trait_sp2$Match<-row.names(Traits3) %in% names(PA_sub3)#mark species as "TRUE" if we have details of them in sites and "FALSE" if we do not
@@ -58,6 +58,7 @@ for (i in 1:length(Unique_study)){
   FD_site_SF<-subset(FD_site,PF_SF=="SF")#subset to give only secondary forest sites
   #include diversity metrics for primary forest reference sites
   FD_site_SF$PF_SpR<-FD_site_PF$SpR
+  FD_site_SF$PF_FDpg<-FD_site_PF$FDpg
   FD_site_SF$PF_FRic<-FD_site_PF$FRic
   FD_site_SF$PF_FEve<-FD_site_PF$FEve
   FD_site_SF$PF_FDiv<-FD_site_PF$FDiv
@@ -65,6 +66,7 @@ for (i in 1:length(Unique_study)){
   FD_site_SF$PF_RaoQ<-FD_site_PF$RaoQ
   #now calculate the log response ratio effect size as a measure of difference between secondary and primary sites
   FD_site_SF$SpR_comp<-log(FD_site_SF$SpR)-log(FD_site_PF$SpR)
+  FD_site_SF$FDpg_comp<-log(FD_site_SF$FDpg)-log(FD_site_PF$FDpg)
   FD_site_SF$FR_comp<-log(FD_site_SF$FRic)-log(FD_site_PF$FRic)
   FD_site_SF$FE_comp<-log(FD_site_SF$FEve)-log(FD_site_PF$FEve)
   FD_site_SF$FDiv_comp<-log(FD_site_SF$FDiv)-log(FD_site_PF$FDiv)
