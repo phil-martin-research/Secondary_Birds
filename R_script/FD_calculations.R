@@ -124,7 +124,7 @@ for (i in 1:length(Unique_study)){
   FD_dendro_summary<-FD_dendro(S=Trait_ab2, A=Abun_sub4,Cluster.method = "average", ord = "podani",Weigthedby = "abundance")
   FD_summary_study<-dbFD(Trait_ab2, Abun_sub4, corr="sqrt",w = c(0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,#produce fd metrics, giving all four traits a similar weight
                                                                1/7,1/7,1/7,1/7,1/7,1/7,1/7,1,1),w.abun = T,calc.FRic=T,m=10)
-  FD_site<-data.frame(Study_info,SpR=FD_dendro_summary$n_sp,FDpg=FD_dendro_summary$FDpg,
+  FD_site<-data.frame(Study_info,SpR=FD_dendro_summary$n_sp,FDpg=FD_dendro_summary$FDpg,FDw=FD_dendro_summary$FDw,
                       FRic=FD_summary_study$FRic,qual_FRic=FD_summary_study$qual.FRic,FEve=FD_summary_study$FEve,
                       FDiv=FD_summary_study$FDiv,FDis=FD_summary_study$FDis,RaoQ=FD_summary_study$RaoQ)
   FD_site_PF<-subset(FD_site,PF_SF=="PF")#subset to give only primary forest sites
@@ -132,6 +132,7 @@ for (i in 1:length(Unique_study)){
   #include diversity metrics for primary forest reference sites
   FD_site_SF$PF_SpR<-FD_site_PF$SpR
   FD_site_SF$PF_FDpg<-FD_site_PF$FDpg
+  FD_site_SF$PF_FDw<-FD_site_PF$FDw
   FD_site_SF$PF_FRic<-FD_site_PF$FRic
   FD_site_SF$PF_FEve<-FD_site_PF$FEve
   FD_site_SF$PF_FDiv<-FD_site_PF$FDiv
@@ -140,6 +141,7 @@ for (i in 1:length(Unique_study)){
   #now calculate the log response ratio effect size as a measure of difference between secondary and primary sites
   FD_site_SF$SpR_comp<-log(FD_site_SF$SpR)-log(FD_site_PF$SpR)
   FD_site_SF$FDpg_comp<-log(FD_site_SF$FDpg)-log(FD_site_PF$FDpg)
+  FD_site_SF$FDw_comp<-log(FD_site_SF$FDw)-log(FD_site_PF$FDw)
   FD_site_SF$FR_comp<-log(FD_site_SF$FRic)-log(FD_site_PF$FRic)
   FD_site_SF$FE_comp<-log(FD_site_SF$FEve)-log(FD_site_PF$FEve)
   FD_site_SF$FDiv_comp<-log(FD_site_SF$FDiv)-log(FD_site_PF$FDiv)
