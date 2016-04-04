@@ -97,11 +97,12 @@ Traits3<-data.matrix(Traits2)#convert trait data to a data.matrix
 
 
 #for each unique site run this loop once
+#remove sites NA values for species abundance
 Abun3<-subset(Abun3,Species!="#N/A")
+Abun3<-Abun3[complete.cases(Abun3),]
 FD_summary_abun<-NULL
 Unique_study<-unique(Abun3$Study)
 for (i in 1:length(Unique_study)){
-  i<-1
   Abun_sub<-subset(Abun3,Study==Unique_study[i])#subset data so that it is only from one study
   Study_info<-unique(Abun_sub[,1:8])#Store info on study ID
   Abun_sub2<-Abun_sub[-c(3:8)]#remove columns that indicate site, study number, whether they are primary or secondary, and methods used in study
@@ -123,12 +124,18 @@ for (i in 1:length(Unique_study)){
   #Shannon diversity
   Shan_div<-diversity(Abun_sub4,index="shannon")
   #Pielou's evenness
-  Even<-diversity(Abun_sub4,index="shannon")/log(specnumber(Abun_sub4))
+  Even<-Shan_div/log(specnumber(Abun_sub4))
   FD_site<-data.frame(Study_info,SpR=FD_dendro_summary$n_sp,Shan_div,Even,FDpg=FD_dendro_summary$FDpg,FDw=FD_dendro_summary$FDw,
                       FRic=FD_summary_study$FRic,qual_FRic=FD_summary_study$qual.FRic,FEve=FD_summary_study$FEve,
-                      FDiv=FD_summary_study$FDiv,FDis=FD_summary_study$FDis,RaoQ=FD_summary_study$RaoQ)
+                      FDiv=FD_summary_study$FDiv,FDis=FD_summary_study$FDis,RaoQ=FD_summary_study$RaoQ,as.numeric(as.character(FD_summary_study$CWM)))
+  #convert all values to numeric in new dataframe
+  for (y in 9:ncol(FD_site)){
+    FD_site[,y]<-as.numeric(as.character(FD_site[,i]))
+  }
+  
   FD_site_PF<-subset(FD_site,PF_SF=="PF")#subset to give only primary forest sites
   FD_site_SF<-subset(FD_site,PF_SF=="SF")#subset to give only secondary forest sites
+  
   #include diversity metrics for primary forest reference sites
   FD_site_SF$PF_SpR<-FD_site_PF$SpR
   FD_site_SF$PF_Shan_div<-FD_site_PF$Shan_div
@@ -140,10 +147,11 @@ for (i in 1:length(Unique_study)){
   FD_site_SF$PF_FDiv<-FD_site_PF$FDiv
   FD_site_SF$PF_FDis<-FD_site_PF$FDis
   FD_site_SF$PF_RaoQ<-FD_site_PF$RaoQ
+  
   #now calculate the log response ratio effect size as a measure of difference between secondary and primary sites
   FD_site_SF$SpR_comp<-log(FD_site_SF$SpR)-log(FD_site_PF$SpR)
   FD_site_SF$Shan_comp<-log(FD_site_SF$Shan_div)-log(FD_site_PF$Shan_div)
-  FD_site_SF$Even_comp<-log(FD_site_SF$Even_div)-log(FD_site_PF$Even_div)
+  FD_site_SF$Even_comp<-log(FD_site_SF$Even)-log(FD_site_PF$Even)
   FD_site_SF$FDpg_comp<-log(FD_site_SF$FDpg)-log(FD_site_PF$FDpg)
   FD_site_SF$FDw_comp<-log(FD_site_SF$FDw)-log(FD_site_PF$FDw)
   FD_site_SF$FR_comp<-log(FD_site_SF$FRic)-log(FD_site_PF$FRic)
@@ -151,6 +159,24 @@ for (i in 1:length(Unique_study)){
   FD_site_SF$FDiv_comp<-log(FD_site_SF$FDiv)-log(FD_site_PF$FDiv)
   FD_site_SF$FDis_comp<-log(FD_site_SF$FDis)-log(FD_site_PF$FDis)
   FD_site_SF$Rao_comp<-log(FD_site_SF$RaoQ)-log(FD_site_PF$RaoQ)
+  #calculate difference between community weighted mean values in primary and secondary forest
+  FD_site_SF$Diet.Inv_comp<-log(FD_site_SF$Diet.Inv)-log(FD_site_PF$Diet.Inv)
+  FD_site_SF$Diet.Vend_comp<-log(FD_site_SF$Diet.Vend)-log(FD_site_PF$Diet.Vend)
+  FD_site_SF$Diet.Vect<-log(FD_site_SF$Diet.Vect)-log(FD_site_PF$Diet.Vect)
+  FD_site_SF$Diet.Vfish_comp<-log(FD_site_SF$Diet.Vfish)-log(FD_site_PF$Diet.Vfish)
+  FD_site_SF$Diet.Vunk_comp<-log(FD_site_SF$Diet.Vunk)-log(FD_site_PF$Diet.Vunk)
+  FD_site_SF$Diet.Scav_comp<-log(FD_site_SF$Diet.Scav)-log(FD_site_PF$Diet.Scav)
+  FD_site_SF$Diet.Fruit_comp<-log(FD_site_SF$Diet.Fruit)-log(FD_site_PF$Diet.Fruit)
+  FD_site_SF$Diet.Nect_comp<-log(FD_site_SF$Diet.Nect)-log(FD_site_PF$Diet.Nect)
+  FD_site_SF$Diet.Seed_comp<-log(FD_site_SF$Diet.Seed)-log(FD_site_PF$Diet.Seed)
+  FD_site_SF$Diet.PlantO_comp<-log(FD_site_SF$Diet.PlantO)-log(FD_site_PF$Diet.PlantO)
+  FD_site_SF$ForStrat.ground_comp<-log(FD_site_SF$ForStrat.ground)-log(FD_site_PF$ForStrat.ground)
+  FD_site_SF$ForStrat.understory_comp<-log(FD_site_SF$ForStrat.understory)-log(FD_site_PF$ForStrat.understory)
+  FD_site_SF$ForStrat.midhigh_comp<-log(FD_site_SF$ForStrat.midhigh)-log(FD_site_PF$ForStrat.midhigh)
+  FD_site_SF$ForStrat.canopy_comp<-log(FD_site_SF$ForStrat.canopy)-log(FD_site_PF$ForStrat.canopy)
+  FD_site_SF$ForStrat.aerial_comp<-log(FD_site_SF$ForStrat.aerial)-log(FD_site_PF$ForStrat.aerial)
+  FD_site_SF$BodyMass.Value_comp<-log(FD_site_SF$BodyMass.Value)-log(FD_site_PF$BodyMass.Value)
+  
   FD_summary_abun<-rbind(FD_site_SF,FD_summary_abun)
   print(i)
 }
