@@ -130,7 +130,7 @@ for (i in 1:length(Unique_study)){
                       FDiv=FD_summary_study$FDiv,FDis=FD_summary_study$FDis,RaoQ=FD_summary_study$RaoQ,FD_summary_study$CWM)
   #convert all values to numeric in new dataframe
   for (y in 9:ncol(FD_site)){
-    FD_site[,y]<-as.numeric(as.character(FD_site[,i]))
+    FD_site[,y]<-as.numeric(as.character(FD_site[,y]))
   }
   
   FD_site_PF<-subset(FD_site,PF_SF=="PF")#subset to give only primary forest sites
