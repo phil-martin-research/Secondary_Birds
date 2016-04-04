@@ -12,6 +12,7 @@ library(dplyr)
 library(tidyr)
 library(GGally)
 library(reshape)
+library(vegan)
 
 #load in data
 P_ab<-read.csv("Data/Site_PresAb2.csv")
@@ -100,6 +101,7 @@ Abun3<-subset(Abun3,Species!="#N/A")
 FD_summary_abun<-NULL
 Unique_study<-unique(Abun3$Study)
 for (i in 1:length(Unique_study)){
+  i<-1
   Abun_sub<-subset(Abun3,Study==Unique_study[i])#subset data so that it is only from one study
   Study_info<-unique(Abun_sub[,1:8])#Store info on study ID
   Abun_sub2<-Abun_sub[-c(3:8)]#remove columns that indicate site, study number, whether they are primary or secondary, and methods used in study
@@ -118,13 +120,19 @@ for (i in 1:length(Unique_study)){
   FD_dendro_summary<-FD_dendro(S=Trait_ab2, A=Abun_sub4,Cluster.method = "average", ord = "podani",Weigthedby = "abundance")
   FD_summary_study<-dbFD(Trait_ab2, Abun_sub4, corr="sqrt",w = c(0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,#produce fd metrics, giving all four traits a similar weight
                                                                1/7,1/7,1/7,1/7,1/7,1/7,1/7,1,1),w.abun = T,calc.FRic=T,m=10)
-  FD_site<-data.frame(Study_info,SpR=FD_dendro_summary$n_sp,FDpg=FD_dendro_summary$FDpg,FDw=FD_dendro_summary$FDw,
+  #Shannon diversity
+  Shan_div<-diversity(Abun_sub4,index="shannon")
+  #Pielou's evenness
+  Even<-diversity(Abun_sub4,index="shannon")/log(specnumber(Abun_sub4))
+  FD_site<-data.frame(Study_info,SpR=FD_dendro_summary$n_sp,Shan_div,Even,FDpg=FD_dendro_summary$FDpg,FDw=FD_dendro_summary$FDw,
                       FRic=FD_summary_study$FRic,qual_FRic=FD_summary_study$qual.FRic,FEve=FD_summary_study$FEve,
                       FDiv=FD_summary_study$FDiv,FDis=FD_summary_study$FDis,RaoQ=FD_summary_study$RaoQ)
   FD_site_PF<-subset(FD_site,PF_SF=="PF")#subset to give only primary forest sites
   FD_site_SF<-subset(FD_site,PF_SF=="SF")#subset to give only secondary forest sites
   #include diversity metrics for primary forest reference sites
   FD_site_SF$PF_SpR<-FD_site_PF$SpR
+  FD_site_SF$PF_Shan_div<-FD_site_PF$Shan_div
+  FD_site_SF$PF_Even<-FD_site_PF$Even
   FD_site_SF$PF_FDpg<-FD_site_PF$FDpg
   FD_site_SF$PF_FDw<-FD_site_PF$FDw
   FD_site_SF$PF_FRic<-FD_site_PF$FRic
@@ -134,6 +142,8 @@ for (i in 1:length(Unique_study)){
   FD_site_SF$PF_RaoQ<-FD_site_PF$RaoQ
   #now calculate the log response ratio effect size as a measure of difference between secondary and primary sites
   FD_site_SF$SpR_comp<-log(FD_site_SF$SpR)-log(FD_site_PF$SpR)
+  FD_site_SF$Shan_comp<-log(FD_site_SF$Shan_div)-log(FD_site_PF$Shan_div)
+  FD_site_SF$Even_comp<-log(FD_site_SF$Even_div)-log(FD_site_PF$Even_div)
   FD_site_SF$FDpg_comp<-log(FD_site_SF$FDpg)-log(FD_site_PF$FDpg)
   FD_site_SF$FDw_comp<-log(FD_site_SF$FDw)-log(FD_site_PF$FDw)
   FD_site_SF$FR_comp<-log(FD_site_SF$FRic)-log(FD_site_PF$FRic)
