@@ -127,7 +127,7 @@ for (i in 1:length(Unique_study)){
   Even<-Shan_div/log(specnumber(Abun_sub4))
   FD_site<-data.frame(Study_info,SpR=FD_dendro_summary$n_sp,Shan_div,Even,FDpg=FD_dendro_summary$FDpg,FDw=FD_dendro_summary$FDw,
                       FRic=FD_summary_study$FRic,qual_FRic=FD_summary_study$qual.FRic,FEve=FD_summary_study$FEve,
-                      FDiv=FD_summary_study$FDiv,FDis=FD_summary_study$FDis,RaoQ=FD_summary_study$RaoQ,as.numeric(as.character(FD_summary_study$CWM)))
+                      FDiv=FD_summary_study$FDiv,FDis=FD_summary_study$FDis,RaoQ=FD_summary_study$RaoQ,FD_summary_study$CWM)
   #convert all values to numeric in new dataframe
   for (y in 9:ncol(FD_site)){
     FD_site[,y]<-as.numeric(as.character(FD_site[,i]))
