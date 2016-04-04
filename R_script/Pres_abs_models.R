@@ -17,15 +17,6 @@ FD_comp<-read.csv("Data/FD_summary_comp.csv")
 
 head(FD_comp)
 
-ggplot(data=FD_comp,aes(x=Age,y=SpR_comp))+geom_point()
-ggplot(data=FD_comp,aes(x=Age,y=FDpg_comp))+geom_point()
-ggplot(data=FD_comp,aes(x=Age,y=FE_comp))+geom_point()
-ggplot(data=FD_comp,aes(x=Age,y=FDiv_comp))+geom_point()
-ggplot(data=FD_comp,aes(x=Age,y=FDis_comp))+geom_point()
-ggplot(data=FD_comp,aes(x=Age,y=FR_comp))+geom_point()
-
-head(FD_comp)
-
 #Species richness
 M0<-lmer(SpR_comp~1+(1|Point_obs)+(1|Mist_nets)+(1|Transect)+(1|Vocal)+(1|Study),data=FD_comp)
 M1<-lmer(SpR_comp~1+Age+(1|Point_obs)+(1|Mist_nets)+(1|Transect)+(1|Vocal)+(1|Study),data=FD_comp)
@@ -37,6 +28,13 @@ summary(M0)
 M0<-lmer(FDpg_comp~1+(1|Point_obs)+(1|Mist_nets)+(1|Transect)+(1|Vocal)+(1|Study),data=FD_comp)
 M1<-lmer(FDpg_comp~1+Age+(1|Point_obs)+(1|Mist_nets)+(1|Transect)+(1|Vocal)+(1|Study),data=FD_comp)
 M2<-lmer(FDpg_comp~1+log(Age)+(1|Point_obs)+(1|Mist_nets)+(1|Transect)+(1|Vocal)+(1|Study),data=FD_comp)
+AICc(M0,M1,M2)
+summary(M0)
+
+#Functional diversity - Petchy & Gaston method
+M0<-lmer(FR_comp~1+(1|Point_obs)+(1|Mist_nets)+(1|Transect)+(1|Vocal)+(1|Study),data=FD_comp)
+M1<-lmer(FR_comp~1+Age+(1|Point_obs)+(1|Mist_nets)+(1|Transect)+(1|Vocal)+(1|Study),data=FD_comp)
+M2<-lmer(FR_comp~1+log(Age)+(1|Point_obs)+(1|Mist_nets)+(1|Transect)+(1|Vocal)+(1|Study),data=FD_comp)
 AICc(M0,M1,M2)
 summary(M0)
 

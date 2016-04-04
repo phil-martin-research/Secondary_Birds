@@ -86,12 +86,7 @@ write.csv(FD_summary,"Data/FD_summary_comp.csv",row.names=F)
 #for this I need to produce FD statistics for one site at a time
 #probably best to use a loop to achieve this
 
-#first exclude data from sites which had poor estimates of abundance - need to ask Catherine about this
-Abun2<-subset(Abun,SiteID!=3&SiteID!=4&SiteID!=11&SiteID!=12&SiteID!=24&
-                SiteID!=25&SiteID!=26&SiteID!=36&SiteID!=47&SiteID!=48&
-                SiteID!=53&SiteID!=54&SiteID!=64&SiteID!=65&SiteID!=37&
-                SiteID!=5&SiteID!=6&SiteID!=11&SiteID!=10)#subset to remove sites with incomplete data
-Abun3<-Abun2[-9]#remove column with species codes
+Abun3<-Abun[-9]#remove column with species codes
 Abun3$Species<-gsub(" ", ".", Abun3$Species, fixed = TRUE)#put dot in between species and genus name
 
 #now sort out trait data
