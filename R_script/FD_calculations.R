@@ -104,7 +104,6 @@ Traits3<-data.matrix(Traits2)#convert trait data to a data.matrix
 Abun3<-subset(Abun3,Species!="#N/A")
 FD_summary_abun<-NULL
 Unique_study<-unique(Abun3$Study)
-#for (i in 1:length(Unique_study)){ -commented out just for a test of code
 for (i in 1:length(Unique_study)){
   Abun_sub<-subset(Abun3,Study==Unique_study[i])#subset data so that it is only from one study
   Study_info<-unique(Abun_sub[,1:8])#Store info on study ID
@@ -150,3 +149,5 @@ for (i in 1:length(Unique_study)){
   FD_summary_abun<-rbind(FD_site_SF,FD_summary_abun)
   print(i)
 }
+
+write.csv(FD_summary_abun,"Data/FD_abun_summary_comp.csv",row.names=F)
