@@ -151,6 +151,23 @@ for (i in 1:nrow(Unique_study)){
   SF_prop_summary<-rbind(SF_prop_sub,SF_prop_summary)
 }
 
+Prop_trans<-function(x){
+  (x+1)/max(ceiling(x+1),na.rm=T)
+}
+
+is.na(SF_prop_summary) <- sapply(SF_prop_summary, is.infinite)
+is.na(SF_prop_summary)<-sapply(SF_prop_summary, is.nan)
+
+for (i in 9:18){
+  SF_prop_summary[[i]]<-Prop_trans(SF_prop_summary[[i]])
+}
+
+  
+(SF_prop_summary$SpR+1)/max(ceiling(SF_prop_summary$SpR+1),na.rm=T)
+
+Prop_trans(SF_prop_summary$SpR)
+
+head(SF_prop_summary)
 
 SF_prop_check<-SF_prop_summary[,c(1:20)]
 SF_prop_check$row_number<-as.numeric(rownames(SF_prop_check))
