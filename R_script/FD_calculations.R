@@ -81,9 +81,7 @@ for (i in 1:length(Unique_study)){
 write.csv(FD_summary,"Data/FD_summary_comp.csv",row.names=F)
 
 
-#maybe I can try to calculate the abundance based metrics?
-
-#now calculate abundance statistics
+#now calculate statistics for data including species abundance
 #for this I need to produce FD statistics for one site at a time
 #probably best to use a loop to achieve this
 
@@ -100,7 +98,8 @@ Traits3<-data.matrix(Traits2)#convert trait data to a data.matrix
 #remove sites NA values for species abundance
 Abun3<-subset(Abun3,Species!="#N/A")
 Abun3<-Abun3[complete.cases(Abun3),]
-FD_summary_abun<-NULL
+FD_site_SF_Summary<-NULL
+FD_site_PF_Summary<-NULL
 Unique_study<-unique(Abun3$Study)
 for (i in 1:length(Unique_study)){
   Abun_sub<-subset(Abun3,Study==Unique_study[i])#subset data so that it is only from one study
@@ -136,49 +135,34 @@ for (i in 1:length(Unique_study)){
   FD_site_PF<-subset(FD_site,PF_SF=="PF")#subset to give only primary forest sites
   FD_site_SF<-subset(FD_site,PF_SF=="SF")#subset to give only secondary forest sites
   
-  #include diversity metrics for primary forest reference sites
-  FD_site_SF$PF_SpR<-FD_site_PF$SpR
-  FD_site_SF$PF_Shan_div<-FD_site_PF$Shan_div
-  FD_site_SF$PF_Even<-FD_site_PF$Even
-  FD_site_SF$PF_FDpg<-FD_site_PF$FDpg
-  FD_site_SF$PF_FDw<-FD_site_PF$FDw
-  FD_site_SF$PF_FRic<-FD_site_PF$FRic
-  FD_site_SF$PF_FEve<-FD_site_PF$FEve
-  FD_site_SF$PF_FDiv<-FD_site_PF$FDiv
-  FD_site_SF$PF_FDis<-FD_site_PF$FDis
-  FD_site_SF$PF_RaoQ<-FD_site_PF$RaoQ
-  
-  #now calculate the log response ratio effect size as a measure of difference between secondary and primary sites
-  FD_site_SF$SpR_comp<-log(FD_site_SF$SpR)-log(FD_site_PF$SpR)
-  FD_site_SF$Shan_comp<-log(FD_site_SF$Shan_div)-log(FD_site_PF$Shan_div)
-  FD_site_SF$Even_comp<-log(FD_site_SF$Even)-log(FD_site_PF$Even)
-  FD_site_SF$FDpg_comp<-log(FD_site_SF$FDpg)-log(FD_site_PF$FDpg)
-  FD_site_SF$FDw_comp<-log(FD_site_SF$FDw)-log(FD_site_PF$FDw)
-  FD_site_SF$FR_comp<-log(FD_site_SF$FRic)-log(FD_site_PF$FRic)
-  FD_site_SF$FE_comp<-log(FD_site_SF$FEve)-log(FD_site_PF$FEve)
-  FD_site_SF$FDiv_comp<-log(FD_site_SF$FDiv)-log(FD_site_PF$FDiv)
-  FD_site_SF$FDis_comp<-log(FD_site_SF$FDis)-log(FD_site_PF$FDis)
-  FD_site_SF$Rao_comp<-log(FD_site_SF$RaoQ)-log(FD_site_PF$RaoQ)
-  #calculate difference between community weighted mean values in primary and secondary forest
-  FD_site_SF$Diet.Inv_comp<-log(FD_site_SF$Diet.Inv)-log(FD_site_PF$Diet.Inv)
-  FD_site_SF$Diet.Vend_comp<-log(FD_site_SF$Diet.Vend)-log(FD_site_PF$Diet.Vend)
-  FD_site_SF$Diet.Vect<-log(FD_site_SF$Diet.Vect)-log(FD_site_PF$Diet.Vect)
-  FD_site_SF$Diet.Vfish_comp<-log(FD_site_SF$Diet.Vfish)-log(FD_site_PF$Diet.Vfish)
-  FD_site_SF$Diet.Vunk_comp<-log(FD_site_SF$Diet.Vunk)-log(FD_site_PF$Diet.Vunk)
-  FD_site_SF$Diet.Scav_comp<-log(FD_site_SF$Diet.Scav)-log(FD_site_PF$Diet.Scav)
-  FD_site_SF$Diet.Fruit_comp<-log(FD_site_SF$Diet.Fruit)-log(FD_site_PF$Diet.Fruit)
-  FD_site_SF$Diet.Nect_comp<-log(FD_site_SF$Diet.Nect)-log(FD_site_PF$Diet.Nect)
-  FD_site_SF$Diet.Seed_comp<-log(FD_site_SF$Diet.Seed)-log(FD_site_PF$Diet.Seed)
-  FD_site_SF$Diet.PlantO_comp<-log(FD_site_SF$Diet.PlantO)-log(FD_site_PF$Diet.PlantO)
-  FD_site_SF$ForStrat.ground_comp<-log(FD_site_SF$ForStrat.ground)-log(FD_site_PF$ForStrat.ground)
-  FD_site_SF$ForStrat.understory_comp<-log(FD_site_SF$ForStrat.understory)-log(FD_site_PF$ForStrat.understory)
-  FD_site_SF$ForStrat.midhigh_comp<-log(FD_site_SF$ForStrat.midhigh)-log(FD_site_PF$ForStrat.midhigh)
-  FD_site_SF$ForStrat.canopy_comp<-log(FD_site_SF$ForStrat.canopy)-log(FD_site_PF$ForStrat.canopy)
-  FD_site_SF$ForStrat.aerial_comp<-log(FD_site_SF$ForStrat.aerial)-log(FD_site_PF$ForStrat.aerial)
-  FD_site_SF$BodyMass.Value_comp<-log(FD_site_SF$BodyMass.Value)-log(FD_site_PF$BodyMass.Value)
-  
-  FD_summary_abun<-rbind(FD_site_SF,FD_summary_abun)
+  FD_site_PF_Summary<-rbind(FD_site_PF,FD_site_PF_Summary)
+  FD_site_SF_Summary<-rbind(FD_site_SF,FD_site_SF_Summary)
   print(i)
 }
+
+
+#then calculate proportional change in variables between seconday and primary forests
+SF_prop_summary<-NULL
+Unique_study<-unique(data.frame(FD_site_SF_Summary$SiteID,FD_site_SF_Summary$Study))
+for (i in 1:nrow(Unique_study)){
+  SF_sub<-subset(FD_site_SF_Summary,Study==Unique_study[i,2]&SiteID==Unique_study[i,1])
+  PF_sub<-subset(FD_site_PF_Summary,Study==Unique_study[i,2])
+  SF_prop_sub<-data.frame(SF_sub[,c(1:8)],(SF_sub[,c(9:ncol(SF_sub))]-PF_sub[,c(9:ncol(PF_sub))])/PF_sub[,c(9:ncol(PF_sub))])
+  SF_prop_summary<-rbind(SF_prop_sub,SF_prop_summary)
+}
+
+
+SF_prop_check<-SF_prop_summary[,c(1:20)]
+SF_prop_check$row_number<-as.numeric(rownames(SF_prop_check))
+SF_prop_check2<-subset(SF_prop_check,FRic<400)
+SF_prop_check_melt<-melt(SF_prop_check2,id.vars=c("SiteID","Study","Age","PF_SF","Point_obs","Mist_nets","Transect","Vocal","row_number"))
+SF_prop_check_melt$value2<-plogis(((SF_prop_check_melt$value+1)/7))
+
+plogis(6.5/7)
+ggplot(SF_prop_check_melt,aes(y=row_number,x=value2))+geom_point()+facet_wrap(~variable,scales = "free")
+
+
+
+
 
 write.csv(FD_summary_abun,"Data/FD_abun_summary_comp.csv",row.names=F)
