@@ -126,6 +126,7 @@ for (i in 1:length(Unique_study)){
   FD_site<-data.frame(Study_info,SpR=FD_dendro_summary$n_sp,Shan_div,Even,FDpg=FD_dendro_summary$FDpg,FDw=FD_dendro_summary$FDw,
                       FRic=FD_summary_study$FRic,qual_FRic=FD_summary_study$qual.FRic,FEve=FD_summary_study$FEve,
                       FDiv=FD_summary_study$FDiv,FDis=FD_summary_study$FDis,RaoQ=FD_summary_study$RaoQ,FD_summary_study$CWM)
+
   #convert all values to numeric in new dataframe
   for (y in 9:ncol(FD_site)){
     FD_site[,y]<-as.numeric(as.character(FD_site[,y]))
@@ -151,16 +152,4 @@ for (i in 1:nrow(Unique_study)){
   SF_prop_summary<-rbind(SF_prop_sub,SF_prop_summary)
 }
 
-SF_prop_summary$row_names<-as.numeric(rownames(SF_prop_summary))
-head(SF_prop_summary)
-
-SF_prop_check_melt<-melt(SF_prop_summary[,c(1:19,ncol(SF_prop_summary))],id.vars=c("SiteID","Study","Age","PF_SF","Point_obs","Mist_nets","Transect","Vocal","row_names"))
-
-ggplot(SF_prop_check_melt,aes(y=row_names,x=value))+geom_point()+facet_wrap(~variable,scales = "free")
-ggplot(SF_prop_check_melt,aes(y=value,x=log(Age)))+geom_point()+facet_wrap(~variable,scales = "free")+geom_smooth(se=F,method="lm")
-
-ggpairs(SF_prop_summary[,c(3,9:11,13:19)])
-
-hist(SF_prop_summary$SpR)
-
-write.csv(FD_summary_abun,"Data/FD_abun_summary_comp.csv",row.names=F)
+write.csv(SF_prop_summary,"Data/FD_abun_summary_comp.csv",row.names=F)
