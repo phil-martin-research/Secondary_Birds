@@ -87,7 +87,6 @@ write.csv(FD_summary,"Data/FD_summary_comp.csv",row.names=F)
 
 Abun3<-Abun[-9]#remove column with species codes
 Abun3$Species<-gsub(" ", ".", Abun3$Species, fixed = TRUE)#put dot in between species and genus name
-
 #now sort out trait data
 row.names(Traits)<-gsub(" ", ".", Traits$Scientific.Name, fixed = TRUE)#put dot in between species and genus name
 Traits2<-Traits[-c(1:4)]#remove columns that are not needed from trait file
@@ -119,7 +118,7 @@ for (i in 1:length(Unique_study)){
   
   FD_dendro_summary<-FD_dendro(S=Trait_ab2, A=Abun_sub4,Cluster.method = "average", ord = "podani",Weigthedby = "abundance")
   FD_summary_study<-dbFD(Trait_ab2, Abun_sub4, corr="sqrt",w = c(0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,#produce fd metrics, giving all four traits a similar weight
-                                                               1/7,1/7,1/7,1/7,1/7,1/7,1/7,1,1),w.abun = T,calc.FRic=T,m=10)
+                                                                 1/7,1/7,1/7,1/7,1/7,1/7,1/7,1,1),w.abun = T,calc.FRic=T,m=10)
   #Shannon diversity
   Shan_div<-diversity(Abun_sub4,index="shannon")
   #Pielou's evenness
@@ -143,43 +142,25 @@ for (i in 1:length(Unique_study)){
 
 #then calculate proportional change in variables between seconday and primary forests
 SF_prop_summary<-NULL
+SF_prop_summary2<-NULL
 Unique_study<-unique(data.frame(FD_site_SF_Summary$SiteID,FD_site_SF_Summary$Study))
 for (i in 1:nrow(Unique_study)){
   SF_sub<-subset(FD_site_SF_Summary,Study==Unique_study[i,2]&SiteID==Unique_study[i,1])
   PF_sub<-subset(FD_site_PF_Summary,Study==Unique_study[i,2])
-  SF_prop_sub<-data.frame(SF_sub[,c(1:8)],(SF_sub[,c(9:ncol(SF_sub))]-PF_sub[,c(9:ncol(PF_sub))])/PF_sub[,c(9:ncol(PF_sub))])
+  SF_prop_sub<-data.frame(SF_sub[,c(1:8)],log(SF_sub[,c(9:ncol(SF_sub))]/PF_sub[,c(9:ncol(PF_sub))]))
   SF_prop_summary<-rbind(SF_prop_sub,SF_prop_summary)
 }
 
-Prop_trans<-function(x){
-  (x+1)/max(ceiling(x+1),na.rm=T)
-}
-
-is.na(SF_prop_summary) <- sapply(SF_prop_summary, is.infinite)
-is.na(SF_prop_summary)<-sapply(SF_prop_summary, is.nan)
-
-for (i in 9:18){
-  SF_prop_summary[[i]]<-Prop_trans(SF_prop_summary[[i]])
-}
-
-  
-(SF_prop_summary$SpR+1)/max(ceiling(SF_prop_summary$SpR+1),na.rm=T)
-
-Prop_trans(SF_prop_summary$SpR)
-
+SF_prop_summary$row_names<-as.numeric(rownames(SF_prop_summary))
 head(SF_prop_summary)
 
-SF_prop_check<-SF_prop_summary[,c(1:20)]
-SF_prop_check$row_number<-as.numeric(rownames(SF_prop_check))
-SF_prop_check2<-subset(SF_prop_check,FRic<400)
-SF_prop_check_melt<-melt(SF_prop_check2,id.vars=c("SiteID","Study","Age","PF_SF","Point_obs","Mist_nets","Transect","Vocal","row_number"))
-SF_prop_check_melt$value2<-plogis(((SF_prop_check_melt$value+1)/7))
+SF_prop_check_melt<-melt(SF_prop_summary[,c(1:19,ncol(SF_prop_summary))],id.vars=c("SiteID","Study","Age","PF_SF","Point_obs","Mist_nets","Transect","Vocal","row_names"))
 
-plogis(6.5/7)
-ggplot(SF_prop_check_melt,aes(y=row_number,x=value2))+geom_point()+facet_wrap(~variable,scales = "free")
+ggplot(SF_prop_check_melt,aes(y=row_names,x=value))+geom_point()+facet_wrap(~variable,scales = "free")
+ggplot(SF_prop_check_melt,aes(y=value,x=log(Age)))+geom_point()+facet_wrap(~variable,scales = "free")+geom_smooth(se=F,method="lm")
 
+ggpairs(SF_prop_summary[,c(3,9:11,13:19)])
 
-
-
+hist(SF_prop_summary$SpR)
 
 write.csv(FD_summary_abun,"Data/FD_abun_summary_comp.csv",row.names=F)
