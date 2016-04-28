@@ -1,0 +1,37 @@
+"","Variable","Random_effects","No_Ran_effects","AICc","Rank"
+"6","SpR_comp","Study",1,44.4835859398843,1
+"4","SpR_comp","Mist_nets+Transect+Study",2,47.031408589593,2
+"5","SpR_comp","Mist_nets+Study",2,47.0368922826643,3
+"3","SpR_comp","Mist nets+ Transect+Vocal+Study",3,49.7227314914422,4
+"2","SpR_comp","Mist nets+Transect+Vocal+Study",4,52.5635723322831,5
+"1","SpR_comp","Point obs+Mist nets+Transect+Vocal+Study",5,55.5667469354578,6
+"12","FDpg_comp","Study",1,26.3802552713607,1
+"10","FDpg_comp","Mist_nets+Transect+Study",2,28.9335616141407,2
+"11","FDpg_comp","Mist_nets+Study",2,28.9335616141407,3
+"9","FDpg_comp","Mist nets+ Transect+Vocal+Study",3,31.6225443798873,4
+"8","FDpg_comp","Mist nets+Transect+Vocal+Study",4,34.4633852207292,5
+"7","FDpg_comp","Point obs+Mist nets+Transect+Vocal+Study",5,37.4665598239025,6
+"18","FR_comp","Study",1,222.822761848947,1
+"16","FR_comp","Mist_nets+Transect+Study",2,225.27424303807,2
+"17","FR_comp","Mist_nets+Study",2,225.376068191727,3
+"15","FR_comp","Mist nets+ Transect+Vocal+Study",3,227.965565939919,4
+"14","FR_comp","Mist nets+Transect+Vocal+Study",4,230.80640678076,5
+"13","FR_comp","Point obs+Mist nets+Transect+Vocal+Study",5,233.809581383935,6
+"24","FE_comp","Study",1,-157.299438353225,1
+"22","FE_comp","Mist_nets+Transect+Study",2,-156.639057073552,2
+"23","FE_comp","Mist_nets+Study",2,-154.816142129645,3
+"21","FE_comp","Mist nets+ Transect+Vocal+Study",3,-154.321311016382,4
+"20","FE_comp","Mist nets+Transect+Vocal+Study",4,-151.777114475818,5
+"19","FE_comp","Point obs+Mist nets+Transect+Vocal+Study",5,-148.773939872643,6
+"30","FDiv_comp","Study",1,-168.383125376849,1
+"28","FDiv_comp","Mist_nets+Transect+Study",2,-165.859290740666,2
+"29","FDiv_comp","Mist_nets+Study",2,-165.829819034069,3
+"27","FDiv_comp","Mist nets+ Transect+Vocal+Study",3,-163.167967838817,4
+"26","FDiv_comp","Mist nets+Transect+Vocal+Study",4,-160.327126997976,5
+"25","FDiv_comp","Point obs+Mist nets+Transect+Vocal+Study",5,-157.323952394802,6
+"36","FDis_comp","Study",1,-32.625658681511,1
+"34","FDis_comp","Mist_nets+Transect+Study",2,-30.1882959613324,2
+"35","FDis_comp","Mist_nets+Study",2,-30.072352338731,3
+"33","FDis_comp","Mist nets+ Transect+Vocal+Study",3,-27.4969730594832,4
+"32","FDis_comp","Mist nets+Transect+Vocal+Study",4,-24.6561322186423,5
+"31","FDis_comp","Point obs+Mist nets+Transect+Vocal+Study",5,-21.6529576154677,6

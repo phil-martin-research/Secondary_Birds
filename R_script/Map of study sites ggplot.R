@@ -21,7 +21,7 @@ p6<-p5+theme(panel.grid.major = element_blank(),
         axis.ticks=element_blank(),
         axis.title.x=element_blank(),
         axis.title.y=element_blank())
-p6
+p6+coord_equal()
 
 
 ggsave(filename = "Figures/Study_locations.pdf",width = 8,height=4,units='in',dpi=400)

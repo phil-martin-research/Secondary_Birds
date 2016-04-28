@@ -22,6 +22,29 @@ Location<-read.csv("Data/Study_location.csv")
 FD_comp<-merge(FD_comp,Location,by="SiteID")
 FD_comp$Lat<-FD_comp$Lat+(rnorm(length(FD_comp$Lat),0,0.00001)) 
 
+#bootstrap to see which model is best for species richness
+Mod_sel<-NULL
+Mod_sel_summary<-NULL
+for (i in 1:1000){
+  Ran_samp<-FD_comp[sample(nrow(FD_comp),size=nrow(FD_comp),replace=TRUE),]
+  for (j in seq(grep("SpR_comp", (colnames(Ran_samp))),grep("Rao_comp", colnames(Ran_samp)))){
+  M0<-lm(Ran_samp[[j]]~1,data=Ran_samp)
+  M1<-lm(Ran_samp[[j]]~log(Age),data=Ran_samp)
+  Mod_AICc<-AICc(M0,M1)[,2]
+  Mod_sel_sub<-data.frame(AICc=Mod_AICc,R2=c(0,summary(M1)$r.squared),model=c("M0","M1"))
+  Mod_sel_sub$Rank1<-ifelse(Mod_sel_sub$AICc==min(Mod_sel_sub$AICc),1,0)
+  Mod_sel_sub$variable<-names(Ran_samp[j])
+  Mod_sel<-rbind(Mod_sel_sub,Mod_sel)
+  }
+  Mod_sel_summary<-rbind(Mod_sel_summary,Mod_sel)
+  print(i)
+}
+
+ddply(Mod_sel_summary,.(variable,model),summarise,M_AICc=mean(AICc),rank=sum(Rank1)/500000)
+
+
+lm(SpR_comp~log(Age),data=FD_comp)
+
 #create a variable to quantify the number of methods used
 FD_comp_new<-NULL
 for (i in 1:nrow(FD_comp)){

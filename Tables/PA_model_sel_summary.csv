@@ -1,0 +1,13 @@
+,Variable,x_var,AICc,delta,R2
+1,SpR_comp,Null model,35.76610732,0,0
+2,SpR_comp,log(Age),36.33456474,0.568457422,0.035511245
+3,FDpg_comp,Null model,14.98397427,0,0
+4,FDpg_comp,log(Age),17.40355597,2.419581704,0.000106648
+5,FR_comp,Null model,221.2643465,0,0
+6,FR_comp,log(Age),223.2003039,1.935957349,0.008671136
+7,FE_comp,Null model,-174.6513136,0.354916451,0
+8,FE_comp,log(Age),-175.0062301,0,0.049354665
+9,FDiv_comp,Null model,-182.8112612,3.852042543,0
+10,FDiv_comp,log(Age),-186.6633037,0,0.123796956
+11,FDis_comp,Null model,-45.45956474,0,0
+12,FDis_comp,log(Age),-44.44796791,1.011596832,0.027273928

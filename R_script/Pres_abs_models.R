@@ -17,9 +17,9 @@ library(afex)
 
 #load in data
 rm(list = ls())
-FD_comp<-read.csv("Data/Site_PresAb2.csv")
+FD_comp<-read.csv("Data/FD_summary_comp.csv")
 Location<-read.csv("Data/Study_location.csv")
-FD_comp<-merge(FD_comp,Location,by.x="Site.ID",by.y="SiteID")
+FD_comp<-merge(FD_comp,Location,by.x="Site",by.y="SiteID")
 
 #create a variable to quantify the number of methods used
 FD_comp_new<-NULL
@@ -39,7 +39,7 @@ FD_comp<-FD_comp_new
 
 #test which arrangement of random effects is best
 AICc_summary<-NULL
-for (i in seq(grep("SpR", (colnames(FD_comp))),grep("Rao", colnames(FD_comp)))){
+for (i in seq(grep("SpR_comp", (colnames(FD_comp))),grep("FDis_comp", colnames(FD_comp)))){
   #run null models to check which random effects structure has the best fit
   M0_1<-lmer(FD_comp[[i]]~log(Age)+(1|Point_obs)+(1|Mist_nets)+(1|Transect)+(1|Vocal)+(1|Study),data=FD_comp,REML=T)
   M0_2<-lmer(FD_comp[[i]]~log(Age)+(1|Mist_nets)+(1|Transect)+(1|Vocal)+(1|Study),data=FD_comp,REML=T)
@@ -62,13 +62,13 @@ for (i in seq(grep("SpR", (colnames(FD_comp))),grep("Rao", colnames(FD_comp)))){
 #without exception the model with the lowest number of random effects comes out on top
 AICc_summary<-AICc_summary[with(AICc_summary, order(Variable, AICc)), ]
 AICc_summary$Rank<-c(1,2,3,4,5,6)
-write.csv(AICc_summary,"Tables/Random_model_AICc.csv")
+write.csv(AICc_summary,"Tables/PA_Random_model_AICc.csv")
 
 #produce a loop that runs all models and then gives model selection tables and parameter estimates as an output
 #and then puts the residuals into dataframe for which a spatial correlogram is run
-pdf("Figures/Abundance_residuals.pdf")
+pdf("Figures/PA_residuals.pdf")
 model_sel_summary<-NULL
-for (i in seq(grep("SpR", (colnames(FD_comp))),grep("Rao", colnames(FD_comp)))){
+for (i in seq(grep("SpR_comp", (colnames(FD_comp))),grep("FDis_comp", colnames(FD_comp)))){
   #run null models to check which random effects structure has the best fit
   M0<-lmer(FD_comp[[i]]~1+(1|Study),data=FD_comp,REML=F)
   M1<-lmer(FD_comp[[i]]~1+log(Age)+(1|Study),data=FD_comp,REML=F)
@@ -77,7 +77,7 @@ for (i in seq(grep("SpR", (colnames(FD_comp))),grep("Rao", colnames(FD_comp)))){
                         AICc=AICc(M0,M1)$AICc)
   model_sel$delta<-max(model_sel$AICc)-min(model_sel$AICc)
   model_sel$R2<-c(r.squaredGLMM(M0)[1],r.squaredGLMM(M1)[1])
-  mod_resid<-data.frame(resids=c(resid(M0),resid(M1)),fitted=c(fitted(M0),fitted(M1)),model=rep(x = c("M0","M1"),each=43),title=names(FD_comp[i]))
+  mod_resid<-data.frame(resids=c(resid(M0),resid(M1)),fitted=c(fitted(M0),fitted(M1)),model=rep(x = c("M0","M1"),each=44),title=names(FD_comp[i]))
   Title<-names(FD_comp[i])
   print(ggplot(mod_resid,aes(x=resids))+geom_histogram()+facet_wrap(~model)+ ggtitle(Title))
   print(Resid_plots<-ggplot(mod_resid,aes(x=fitted,y=resids))+geom_point()+facet_wrap(~model)+ ggtitle(Title))
@@ -85,28 +85,55 @@ for (i in seq(grep("SpR", (colnames(FD_comp))),grep("Rao", colnames(FD_comp)))){
 }
 dev.off()
 
-write.csv(model_sel_summary,"Tables/model_sel_summary.csv")
+write.csv(model_sel_summary,"Tables/PA_model_sel_summary.csv")
 
-#variables that respond to age - SpR, FDiv
+#variables that respond to age - FEve, FDiv
 #variables that don't respond to age - Even_comp, FDpg_comp, FDw_comp, FE_comp, FDis_comp, Rao_comp
 
 
+#first look at variables that respond to age
+#FDiv
+M1_FE<-lmer(FE_comp~log(Age)+(1|Study),data=FD_comp)
+summary(M1_FE)
+plot(M1_FE)
+r.squaredGLMM(M1_FDiv)
 
-ggplot(FD_comp,aes(x=log(Age),y=FRic))+geom_point()+geom_smooth(se=F,method="lm")
-ggplot(FD_comp,aes(x=log(Age),y=FDiv))+geom_point()+geom_smooth(se=F,method="lm")
+FD_comp$Age_trans<-(log(FD_comp$Age)-mean(log(FD_comp$Age)))/sd(FD_comp$Age)
 
+FE_comp_M1<-lme(FE_comp~Age_trans,random=~1|Study,weights=varExp(form=~Study),data=FD_comp)
+
+summary(FE_comp_M1)
+
+
+r.squaredGLMM(FE_comp_M1)
+
+?lme
+
+par(mfrow=c(1,1))
+plot(FD_comp$FE_comp,predict(FE_comp_M1,re.form=NULL))
+
+plot(fitted(FE_comp_M1),resid(FE_comp_M1))
+
+weights=varExp(form=~logRe|Study)
+
+
+FE_M1<-lm(FDiv_comp~log(Age),data=FD_comp)
+summary(FE_M1)
+par(mfrow=c(2,2))
+plot(FE_M1)
 
 #first look at variables that respond to age
-#Species richness
-M1_SPR<-lmer(SpR~log(Age)+(1|Study),data=FD_comp)
-summary(M1_SPR)
-r.squaredGLMM(M1_SPR)
+#FDiv
+M1_FDiv<-lmer(FDiv_comp~log(Age)+(1|Study),data=FD_comp)
+summary(M1_FDiv)
+plot(M1_FDiv)
+r.squaredGLMM(M1_FDiv)
 
-SpR_coefs <- data.frame(coef(summary(M1_SPR)))
-mixed(SpR~log(Age)+(1|Study),data=FD_comp,test.intercept =T)
-summary(SPR_P)
-mixed(FDiv~log(Age)+(1|Study),data=FD_comp,test.intercept =T)
-?mixed
+
+ggplot(FD_comp,aes(x=log(Age),y=FDiv_comp))+geom_point()+geom_abline(intercept=0.028323,slope=-0.009531)
+
+
+
 
 
 # use normal distribution to approximate p-value
