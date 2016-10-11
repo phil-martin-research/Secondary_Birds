@@ -13,6 +13,9 @@ library(MuMIn)
 library(ncf)
 library(nlme)
 library(afex)
+library(cowplot)
+library(influence.ME)
+library(ggcorrplot)
 
 
 #load in data
@@ -21,6 +24,18 @@ FD_comp<-read.csv("Data/FD_abun_summary_comp.csv")
 Location<-read.csv("Data/Study_location.csv")
 FD_comp<-merge(FD_comp,Location,by="SiteID")
 FD_comp$Lat<-FD_comp$Lat+(rnorm(length(FD_comp$Lat),0,0.00001)) 
+
+
+#before any analyses assess whether there is any correlation between the different measures of
+#diversity we are using here
+
+head(FD_comp)
+FD_comp_sub<- FD_comp[, c(9,12:17)]
+head(FD_comp_sub)
+cormat <- round(cor(FD_comp_sub),2)
+ggcorr(FD_comp_sub,label = T)
+ggsave("Figures/Correlation_matrix.png",width=6,height=6,dpi=100,units="in")
+ggpairs(FD_comp_sub)
 
 #bootstrap to see which model is best for species richness
 Mod_sel<-NULL
@@ -83,16 +98,32 @@ for (i in seq(grep("SpR", (colnames(FD_comp))),grep("Rao", colnames(FD_comp)))){
   AICc_summary<-rbind(AICc_summary,AICc_sum) 
 }
 
-M1<-lmer(SpR~1+log(Age)+(1|Study),data=FD_comp,REML=F)
-
-plot(fitted(M1),residuals(M1))
-plot(log(FD_comp$Age),residuals(M1))
-
 
 #without exception the model with the lowest number of random effects comes out on top
 AICc_summary<-AICc_summary[with(AICc_summary, order(Variable, AICc)), ]
 AICc_summary$Rank<-c(1,2,3,4,5,6)
 write.csv(AICc_summary,"Tables/Random_model_AICc.csv")
+
+#now look at the influence of data points when age is logged or unlogged
+#this is for the reviewers comments
+M1<-lmer(SpR~1+log(Age)+(1|Study),data=FD_comp,REML=F)
+M2<-lmer(SpR~1+Age+(1|Study),data=FD_comp,REML=F)
+
+infl1 <- influence(M1, obs = TRUE)
+infl2 <- influence(M2, obs = TRUE)
+
+plot(infl1, which = "cook")
+plot(infl2, which = "cook")
+
+Log_plot<-qplot(FD_comp$Age,cooks.distance(infl1))+geom_smooth(se=F,method="lm")+xlab("Time since last disturbance (Years)")+ylab("Cook's distance")+coord_cartesian(xlim=c(0,105),ylim=c(-0.01,0.25),expand = F)
+Unlogged_plot<-qplot(FD_comp$Age,cooks.distance(infl2))+geom_smooth(se=F,method="lm")+xlab("Time since last disturbance (Years)")+ylab("Cook's distance")+coord_cartesian(xlim=c(0,105),ylim=c(-0.01,0.25),expand = F)
+both_plots<-plot_grid(Unlogged_plot, Log_plot, labels = c("A", "B"))
+save_plot("figures/unlogged_log.png", both_plots,
+         ncol = 2, # we're saving a grid plot of 2 columns
+         nrow = 1, # and 2 rows
+         # each individual subplot should have an aspect ratio of 1.3
+         base_aspect_ratio = 1.3
+)
 
 #produce a loop that runs all models and then gives model selection tables and parameter estimates as an output
 #and then puts the residuals into dataframe for which a spatial correlogram is run
@@ -136,7 +167,6 @@ SpR_coefs <- data.frame(coef(summary(M1_SPR)))
 mixed(SpR~log(Age)+(1|Study),data=FD_comp,test.intercept =T)
 summary(SPR_P)
 mixed(FDiv~log(Age)+(1|Study),data=FD_comp,test.intercept =T)
-?mixed
 
 
 # use normal distribution to approximate p-value
@@ -152,31 +182,28 @@ FDiv_coefs <- data.frame(coef(summary(M1_FDiv)))
 FDiv_coefs$p.z <- 2 * (1 - pnorm(abs(coefs$t.value)))
 FDiv_coefs$variable<-"FDiv"
 
-
-?mcmcsamp
-
 #plot results
-new.data<-data.frame(Age=seq(min(FD_comp$Age),max(FD_comp$Age)))
-new.data$FDiv<-predict(M1_FDiv,new.data,re.form=NA)
-new.data$SpR<-predict(M1_SPR,new.data,re.form=NA)
-new_data_preds<-melt(new.data,id.vars=c("Age"))
-new_data_preds$SE<-c(predict(M1_FDiv,new.data,re.form=NA,se.fit=T,)$se.fit,
-                         predict(M1_SPR,new.data,re.form=NA,se.fit=T)$se.fit)
-
-new_data_preds$var2<-ifelse(new_data_preds$variable=="SpR","Species richness","Functional divergence (FDiv)")
+new.data_FDiv<-data.frame(Age=seq(min(FD_comp$Age),max(FD_comp$Age)))
+new.data_FDiv$FDiv<-predict(M1_FDiv,new.data_FDiv,re.form=NA)
+new.data_FDiv$SE<-predict(M1_FDiv,new.data_FDiv,re.form=NA,se.fit=T)$se.fit
 
 
-head(FD_comp)
-FD_comp_plots<-FD_comp[,c(3,9,16)]
-FD_comp_plots_melt<-melt(FD_comp_plots,id.vars="Age")
-FD_comp_plots_melt$var2<-ifelse(FD_comp_plots_melt$variable=="SpR","Species richness","Functional divergence (FDiv)")
-theme_set(theme_bw(base_size=12))
-P1<-ggplot(FD_comp_plots_melt,aes(x=Age,y=value))+geom_point(shape=1)+facet_wrap(~var2,scales = "free_y",)+scale_x_log10()
-P2<-P1+geom_line(data=new_data_preds,aes(x=Age,y=value),size=1)+xlab("Age (years - log scale)")
-P3<-P2+geom_hline(yintercept=0,lty=2)+ylab("Difference between secondary \nand primary forest sites (log response ratio)")
-P3+geom_ribbon(data=new_data_preds,aes(x=Age,y=value,ymax=value+(2*SE),ymin=value-(2*SE)),alpha=0.5)
-ggsave("Figures/Age_models_abun.pdf",width=8,height=4,dpi=400,units="in")
-ggsave("Figures/Age_models_abun.png",width=8,height=4,dpi=400,units="in")
+new.data_SpR<-data.frame(Age=seq(min(FD_comp$Age),max(FD_comp$Age)))
+new.data_SpR$SpR<-predict(M1_SPR,new.data_SpR,re.form=NA)
+new.data_SpR$SE<-predict(M1_SPR,new.data_SpR,re.form=NA,se.fit=T)$se.fit
+
+#plot for species richness
+theme_set(theme_cowplot())
+SPR_P1<-ggplot(FD_comp,aes(x=Age,y=SpR))+geom_point(shape=1)+scale_x_log10()
+SPR_P2<-SPR_P1+geom_line(data=new.data_SpR,aes(x=Age,y=SpR),size=1)+xlab("Time since last disturbance (Years)")
+SPR_P3<-SPR_P2+geom_hline(yintercept=0,lty=2)+ylab("Relative secondary forest \nspecies richness (response ratio)")
+SPR_P4<-SPR_P3+geom_ribbon(data=new.data_SpR,aes(x=Age,y=SpR,ymax=SpR+(2*SE),ymin=SpR-(2*SE)),alpha=0.5)
+
+#plot for FDiv
+FDiv_P1<-ggplot(FD_comp,aes(x=Age,y=FDiv))+geom_point(shape=1)+scale_x_log10()
+FDiv_P2<-FDiv_P1+geom_line(data=new.data_FDiv,aes(x=Age,y=FDiv),size=1)+xlab("Time since last disturbance (Years)")
+FDiv_P3<-FDiv_P2+geom_hline(yintercept=0,lty=2)+ylab("Relative secondary forest \nfunctional divergence (response ratio)")
+FDiv_P4<-FDiv_P3+geom_ribbon(data=new.data_FDiv,aes(x=Age,y=FDiv,ymax=FDiv+(2*SE),ymin=FDiv-(2*SE)),alpha=0.5)
 
 #################################################
 #now look at variables that don't respond to age#
@@ -189,30 +216,82 @@ var_list<-c("FDpg","FRic","FEve","FDis")
 for (i in 1:length(var_list)){
   #i<-2
   j<-grep(var_list[i], colnames(FD_comp))
-  #M1<-lmer(FD_comp[[j]]~1+(1|Study),data=FD_comp)
+  M1<-lmer(FD_comp[[j]]~1+(1|Study),data=FD_comp)
   print(var_list[i])
   FD_comp$FDpg
-  mixed(FDpg~1+(1|Study),data=FD_comp,test.intercept =T)
-  mixed(FRic~1+(1|Study),data=FD_comp,test.intercept =T)
-  mixed(FDpg~1+(1|Study),data=FD_comp,test.intercept =T)
-  mixed(FDis~1+(1|Study),data=FD_comp,test.intercept =T)
-  mixed(FDiv~1+(1|Study),data=FD_comp,test.intercept =T)
   
-  #coefs <- data.frame(coef(summary(M1)))
-  #coefs$p.z <- 2 * (1 - pnorm(abs(coefs$t.value)))
-  #coefs$variable<-var_list[i]
-  #coefs_summary<-rbind(coefs,coefs_summary)
+  coefs <- data.frame(coef(summary(M1)))
+  coefs$p.z <- 2 * (1 - pnorm(abs(coefs$t.value)))
+  coefs$variable<-var_list[i]
+  coefs_summary<-rbind(coefs,coefs_summary)
 }
 
 Coefs_summary<-rbind(coefs_summary,FDiv_coefs,SpR_coefs)
 
-coefs_summary$var2<-c("Functional dispersion (FDis)","Functional Evenness (FEve)","Functional richness (FRic)","Functional Diversity (FD)")
+coefs_summary$var2<-c("Functional \ndispersion \n(FDis)","Functional \nEvenness \n(FEve)","Functional \nrichness \n(FRic)","Functional \nDiversity \n(FD)")
 
 write.csv(Coefs_summary,"Tables/Coefs_summary.csv")
 
 Plot1<-ggplot(coefs_summary,aes(x=var2,y=Estimate,ymax=Estimate+(1.96*Std..Error),ymin=Estimate-(1.96*Std..Error)))+geom_point(shape=1,size=3)+geom_errorbar(width=0.5)
-Plot2<-Plot1+geom_hline(yintercept=0,lty=2)+ylab("Difference between secondary \nand primary forset sites (log response ratio)")
-Plot2+xlab("Diversity variable")+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+Plot2<-Plot1+geom_hline(yintercept=0,lty=2)+ylab("Difference between secondary \nand primary forest sites (log response ratio)")
+Plot2+xlab("Diversity variable")
 ggsave("Figures/Null_models_abun.pdf",width=6,height=6,dpi=400,units="in")
 ggsave("Figures/Null_models_abun.png",width=6,height=6,dpi=400,units="in")
 
+
+#############################################################
+#this section is for modelling of specialist species richness#
+##############################################################
+
+#load in data
+Forest_dep<-read.csv("Data/Site_Abun5.csv")
+head(Forest_dep)
+Forest_dep2<-subset(Forest_dep,For_dep=="High"|For_dep=="Medium")
+Forest_dep2<-subset(Forest_dep,For_dep=="High")
+
+For_rich_summary<-ddply(Forest_dep2,.(SiteID,Study,Age,PF_SF,Point_obs,Mist_nets,Transect,Vocal),summarise,For_rich=length(Vocal))
+
+#create loop to compare richness in primary and secondary forest
+SF_summary<-NULL
+Un_study<-unique(Forest_dep2$Study)
+for (i in 1:length(Un_study)){
+  SF_sub<-subset(For_rich_summary,Study==Un_study[i]&PF_SF=="SF")
+  PF_sub<-subset(For_rich_summary,Study==Un_study[i]&PF_SF=="PF")
+  SF_sub$Prop_rich<-log(SF_sub$For_rich)-log(PF_sub$For_rich)
+  SF_summary<-rbind(SF_sub,SF_summary)
+}
+
+#produce models of this relationship
+M0<-lmer(Prop_rich~1+(1|Study),data=SF_summary)
+M1<-lmer(Prop_rich~log(Age)+(1|Study),data=SF_summary)
+
+AICc(M0,M1)
+summary(M1)
+
+r.squaredGLMM(M1)
+
+#plot results
+new.data<-data.frame(Age=seq(min(SF_summary$Age),max(SF_summary$Age),length.out = 1000))
+new.data$Prop_rich<-predict(M1,new.data,re.form=NA,se.fit=T)$fit
+new.data$SE<-predict(M1,new.data,re.form=NA,se.fit=T)$se.fit
+
+
+ForSpec_P1<-ggplot(SF_summary,aes(x=Age,y=Prop_rich))+geom_point(shape=1)+scale_x_log10()
+ForSpec_P2<-ForSpec_P1+geom_line(data=new.data,aes(x=Age,y=Prop_rich),size=1)+xlab("Time since last disturbance (Years)")
+ForSpec_P3<-ForSpec_P2+geom_hline(yintercept=0,lty=2)+ylab("Relative secondary forest \nspecialist richness (response ratio)")
+ForSpec_P4<-ForSpec_P3+geom_ribbon(data=new.data,aes(x=Age,y=Prop_rich,ymax=Prop_rich+(2*SE),ymin=Prop_rich-(2*SE)),alpha=0.5)
+
+
+time_plots<-plot_grid(SPR_P4, ForSpec_P4,FDiv_P4, labels = c("(a)", "(b)","(c)"), align = "h",ncol = 1)
+save_plot("Figures/time_plots.pdf", time_plots,
+          nrow = 3, # we're saving a grid plot of 2 columns
+          # each individual subplot should have an aspect ratio of 1.3
+          base_height = 4,
+          base_width=5
+)
+save_plot("Figures/time_plots.png", time_plots,
+          nrow = 3, # we're saving a grid plot of 2 columns
+          # each individual subplot should have an aspect ratio of 1.3
+          base_height =4,
+          base_width=5
+)
