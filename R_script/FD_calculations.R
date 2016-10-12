@@ -115,6 +115,14 @@ for (i in 1:length(Unique_study)){
   remove_sp2<-subset(Trait_sp2,Match=="FALSE")[,1]#produce vector of species to remove from dataset
   Trait_ab2<-Traits3[-which(rownames(Traits3) %in% remove_sp2), ]#remove species from trait dataset
   Trait_ab2<-Trait_ab2[order(rownames(Trait_ab2)), ]#order trait dataset so it has the same order as the species dataset
+  #calculate standardised effect size FD
+  #calculate distance based on trait differences of species
+  D<-vegdist(Trait_ab2,"gower")
+  #calculate tree based on distances
+  tree<-hclust(D,"average")
+  #covert this to a phylogeny
+  tree.p<-as.phylo(tree)
+  SES_FD<-ses.pd(Abun_sub4,tree.p,null.model = "richness",runs=999,iterations = 1000)
   
   FD_dendro_summary<-FD_dendro(S=Trait_ab2, A=Abun_sub4,Cluster.method = "average", ord = "podani",Weigthedby = "abundance")
   FD_summary_study<-dbFD(Trait_ab2, Abun_sub4, corr="sqrt",w = c(0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,#produce fd metrics, giving all four traits a similar weight
@@ -125,7 +133,7 @@ for (i in 1:length(Unique_study)){
   Even<-Shan_div/log(specnumber(Abun_sub4))
   FD_site<-data.frame(Study_info,SpR=FD_dendro_summary$n_sp,Shan_div,Even,FDpg=FD_dendro_summary$FDpg,FDw=FD_dendro_summary$FDw,
                       FRic=FD_summary_study$FRic,qual_FRic=FD_summary_study$qual.FRic,FEve=FD_summary_study$FEve,
-                      FDiv=FD_summary_study$FDiv,FDis=FD_summary_study$FDis,RaoQ=FD_summary_study$RaoQ,FD_summary_study$CWM)
+                      FDiv=FD_summary_study$FDiv,FDis=FD_summary_study$FDis,RaoQ=FD_summary_study$RaoQ,FD_summary_study$CWM,FD_SES=SES_FD$pd.obs.z)
 
   #convert all values to numeric in new dataframe
   for (y in 9:ncol(FD_site)){
