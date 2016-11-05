@@ -13,13 +13,18 @@ library(tidyr)
 library(GGally)
 library(reshape)
 library(vegan)
+library(ggplot2)
+library(lme4)
+library(MuMIn)
+library(picante)
 
 #load in data
-P_ab<-read.csv("Data/Site_PresAb2.csv")
-Traits<-read.csv("Data/Bird_traits.csv")
+Traits<-read.csv("Data/Bird_traits_Oct_2016.csv")
+#remove traits we don't want to use for this analysis
+Traits<-Traits[,c(1:14,17:21,23,24,26)]
 Abun<-read.csv("Data/Site_abun5.csv")
-
-#first calculate presence/absence statistics
+#subset to remove the studies of de Lima et al and Slik and Van Balen
+Abun<-subset(Abun,Study!=28&Study!=15)
 
 #produce a loop to calculate statistics for each study one at a time
 #for this I need to calculate the FD statistics as well as Petchy and Gaston's FD
@@ -49,7 +54,7 @@ Unique_study<-unique(Abun3$Study)
 for (i in 1:length(Unique_study)){
   Abun_sub<-subset(Abun3,Study==Unique_study[i])#subset data so that it is only from one study
   Study_info<-unique(Abun_sub[,1:8])#Store info on study ID
-  Abun_sub2<-Abun_sub[-c(3:8)]#remove columns that indicate site, study number, whether they are primary or secondary, and methods used in study
+  Abun_sub2<-Abun_sub[-c(3:8,11)]#remove columns that indicate site, study number, whether they are primary or secondary, and methods used in study
   Abun_sub2$Abundance<-Abun_sub2$Abundance*100
   Abun_sub2<-spread(Abun_sub2,Species,Abundance)#spread data so that each species has a column
   keeps<-colSums(Abun_sub2,na.rm = T)>0#identify species not present in local species pool
@@ -69,15 +74,11 @@ for (i in 1:length(Unique_study)){
   #covert this to a phylogeny
   tree.p<-as.phylo(tree)
   SES_FD<-ses.pd(Abun_sub4,tree.p,null.model = "richness",runs=999,iterations = 1000)
-  
   FD_dendro_summary<-FD_dendro(S=Trait_ab2, A=Abun_sub4,Cluster.method = "average", ord = "podani",Weigthedby = "abundance")
   FD_summary_study<-dbFD(Trait_ab2, Abun_sub4, corr="sqrt",w = c(0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,#produce fd metrics, giving all four traits a similar weight
-                                                                 1/7,1/7,1/7,1/7,1/7,1/7,1/7,1,1),w.abun = T,calc.FRic=T,m=10)
-  #Shannon diversity
-  Shan_div<-diversity(Abun_sub4,index="shannon")
-  #Pielou's evenness
-  Even<-Shan_div/log(specnumber(Abun_sub4))
-  FD_site<-data.frame(Study_info,SpR=FD_dendro_summary$n_sp,Shan_div,Even,FDpg=FD_dendro_summary$FDpg,FDw=FD_dendro_summary$FDw,
+                                                                 1/5,1/5,1/5,1/5,1/5,1,1,1),w.abun = T,calc.FRic=T,m=10)
+  
+  FD_site<-data.frame(Study_info,SpR=FD_dendro_summary$n_sp,FDpg=FD_dendro_summary$FDpg,FDw=FD_dendro_summary$FDw,
                       FRic=FD_summary_study$FRic,qual_FRic=FD_summary_study$qual.FRic,FEve=FD_summary_study$FEve,
                       FDiv=FD_summary_study$FDiv,FDis=FD_summary_study$FDis,RaoQ=FD_summary_study$RaoQ,FD_summary_study$CWM,FD_SES=SES_FD$pd.obs.z)
 
@@ -94,14 +95,39 @@ for (i in 1:length(Unique_study)){
   print(i)
 }
 
+str(FD_site_PF_Summary)
 
-#then calculate proportional change in variables between seconday and primary forests
+
+SES_FD_summary<-merge(x=FD_site_SF_Summary[,c(1:8,ncol(FD_site_SF_Summary))],y=FD_site_PF_Summary[,c(1:8,ncol(FD_site_PF_Summary))],by=c("Study","Point_obs","Mist_nets","Transect","Vocal"))
+SES_FD_summary2<-SES_FD_summary[,-c(6,8,10:12)]
+names(SES_FD_summary2)<-c("study","Point_obs","Mist_nets","Transect","Vocal","Age","SES_Sec","SES_P")
+SES_FD_summary2$SES_Diff<-SES_FD_summary2$SES_Sec-SES_FD_summary2$SES_P
+
+write.csv(SES_FD_summary2,"Data/SES_summary.csv",row.names=F)
+
+SES_FD_summary2<-read.csv("Data/SES_summary.csv")
+ggplot(SES_FD_summary2,aes(x=Age,y=SES_Diff))+geom_point()+scale_x_log10()+geom_smooth(method="lm")
+ggplot(SES_FD_summary2,aes(x=Age,y=SES_Sec))+geom_point()+scale_x_log10()+geom_smooth(method="lm")+geom_hline(yintercept=mean(SES_FD_summary2$SES_P))
+
+
+M1<-lmer(SES_Sec~log(Age)+(1|study),data=SES_FD_summary2)
+M2<-lmer(SES_Diff~log(Age)+(1|study),data=SES_FD_summary2)
+
+summary(M1)
+r.squaredGLMM(M1)
+summary(M2)
+r.squaredGLMM(M2)
+
+
+#then calculate proportional change in variables between secondary and primary forests
 SF_prop_summary<-NULL
 SF_prop_summary2<-NULL
 Unique_study<-unique(data.frame(FD_site_SF_Summary$SiteID,FD_site_SF_Summary$Study))
 for (i in 1:nrow(Unique_study)){
   SF_sub<-subset(FD_site_SF_Summary,Study==Unique_study[i,2]&SiteID==Unique_study[i,1])
+  SF_sub<-(SF_sub[,c(1:16)])
   PF_sub<-subset(FD_site_PF_Summary,Study==Unique_study[i,2])
+  PF_sub<-(PF_sub[,c(1:16)])
   SF_prop_sub<-data.frame(SF_sub[,c(1:8)],log(SF_sub[,c(9:ncol(SF_sub))]/PF_sub[,c(9:ncol(PF_sub))]))
   SF_prop_summary<-rbind(SF_prop_sub,SF_prop_summary)
 }

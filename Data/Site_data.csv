@@ -1,0 +1,84 @@
+SiteID,StudyID,Patch_size,Disturbance_type,Cont_PF
+1,1,,,
+2,1,,Shifting Agriculture,No
+3,2,900,,
+4,2,2,Pasture,Yes
+5,3,800,,
+6,3,200,Shifting Agriculture,Yes
+7,4,,,
+8,4,100,Shifting Agriculture,
+9,4,100,Shifting Agriculture,
+10,5,,,
+11,5,2.5,Pasture,No
+12,5,,Urban development,No
+13,6,51,,
+14,6,51,Shifting Agriculture,Yes
+15,7,,,
+16,7,,Pasture,Yes
+17,7,,Shifting Agriculture,Yes
+18,8,,,
+19,8,2.5,Shifting Agriculture,No
+20,8,2.5,Shifting Agriculture,No
+21,8,2.5,Shifting Agriculture,No
+22,8,2.5,Shifting Agriculture,No
+23,8,,Urban development,No
+24,9,1000,,
+25,9,40,Pasture,No
+26,9,22.5,Pasture,Yes
+27,10,1000,,
+28,10,1000,Plantation,Yes
+29,11,37000,,
+30,11,48000,Clear cut,Yes
+31,12,,,
+32,12,,Clear cut,Yes
+33,13,,,
+34,13,,Arable agriculture,
+35,14,4,,
+36,14,4,Shifting Agriculture,Yes
+37,14,4,Shifting Agriculture,Yes
+38,14,4,Shifting Agriculture,Yes
+39,15,,,
+40,15,,Plantation,No
+41,16,,,
+42,16,,Plantation,Yes
+47,18,475,,
+48,18,,Pasture,Yes
+49,19,,,
+50,19,,Pasture,No
+51,20,30000,,
+52,20,1250,Arable agriculture,Yes
+53,21,10081,,
+54,21,10,Shifting Agriculture,No
+55,22,,,
+56,22,,Arable agriculture,
+57,22,,Arable agriculture,
+58,23,100,,
+59,23,100,Fire,Yes
+60,24,,,
+61,24,,Shifting Agriculture,Yes
+62,25,,,
+63,25,,Shifting Agriculture,Yes
+64,26,,,
+65,26,2,Pasture,Yes
+66,27,12,,
+67,27,,Plantation,Yes
+68,27,,Plantation,Yes
+69,28,1500,,
+70,28,,Fire,Yes
+71,29,,,
+72,29,,Arable agriculture,
+73,30,,,
+74,30,,Pasture,Yes
+75,30,,Pasture,No
+76,30,100,Pasture,No
+77,31,,,
+78,31,,Pasture,Yes
+81,33,,,
+82,33,,Clear cut,Yes
+83,33,1.25,Clear cut,No
+84,33,1.25,Clear cut,No
+85,34,,,
+86,34,1,Arable agriculture,No
+87,34,1,Arable agriculture,No
+88,35,,,
+89,35,,Pasture,Yes
