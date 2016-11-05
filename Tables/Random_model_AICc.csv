@@ -11,33 +11,27 @@
 "9","FDpg","Mist nets+ Transect+Vocal+Study",3,26.9188909274921,4
 "8","FDpg","Mist nets+Transect+Vocal+Study",4,29.9425468414706,5
 "7","FDpg","Point obs+Mist nets+Transect+Vocal+Study",5,33.1747307495166,6
-"17","FDw","Mist_nets+Study",2,51.2600530843523,1
-"18","FDw","Study",1,51.7218395517904,2
-"16","FDw","Mist_nets+Transect+Study",2,53.2012562746075,3
-"14","FDw","Mist nets+Transect+Vocal+Study",4,55.6168602922597,4
-"15","FDw","Mist nets+ Transect+Vocal+Study",3,56.0359336939625,5
-"13","FDw","Point obs+Mist nets+Transect+Vocal+Study",5,58.8490442003059,6
-"24","FRic","Study",1,180.885477507534,1
-"22","FRic","Mist_nets+Transect+Study",2,183.548356295413,2
-"23","FRic","Mist_nets+Study",2,183.548356295413,3
-"21","FRic","Mist nets+ Transect+Vocal+Study",3,186.383033714768,4
-"20","FRic","Mist nets+Transect+Vocal+Study",4,189.406689628747,5
-"19","FRic","Point obs+Mist nets+Transect+Vocal+Study",5,192.638873536793,6
-"30","FEve","Study",1,-33.3170438356284,1
-"28","FEve","Mist_nets+Transect+Study",2,-30.6541650477496,2
-"29","FEve","Mist_nets+Study",2,-30.6541650477496,3
-"27","FEve","Mist nets+ Transect+Vocal+Study",3,-27.9486038868105,4
-"26","FEve","Mist nets+Transect+Vocal+Study",4,-24.924947972832,5
-"25","FEve","Point obs+Mist nets+Transect+Vocal+Study",5,-21.6927640647861,6
-"36","FDiv","Study",1,-82.2208587182532,1
-"34","FDiv","Mist_nets+Transect+Study",2,-79.6508502885272,2
-"35","FDiv","Mist_nets+Study",2,-79.5579799303744,3
-"33","FDiv","Mist nets+ Transect+Vocal+Study",3,-77.46771052008,4
-"32","FDiv","Mist nets+Transect+Vocal+Study",4,-74.4440546061015,5
-"31","FDiv","Point obs+Mist nets+Transect+Vocal+Study",5,-71.211870698054,6
-"42","FDis","Study",1,-11.7578822263649,1
-"40","FDis","Mist_nets+Transect+Study",2,-9.4417696685707,2
-"41","FDis","Mist_nets+Study",2,-9.16662167192417,3
-"39","FDis","Mist nets+ Transect+Vocal+Study",3,-6.60709224921587,4
-"38","FDis","Mist nets+Transect+Vocal+Study",4,-3.58343633523733,5
-"37","FDis","Point obs+Mist nets+Transect+Vocal+Study",5,-0.351252427191358,6
+"18","FRic","Study",1,180.885477507534,1
+"16","FRic","Mist_nets+Transect+Study",2,183.548356295413,2
+"17","FRic","Mist_nets+Study",2,183.548356295413,3
+"15","FRic","Mist nets+ Transect+Vocal+Study",3,186.383033714768,4
+"14","FRic","Mist nets+Transect+Vocal+Study",4,189.406689628747,5
+"13","FRic","Point obs+Mist nets+Transect+Vocal+Study",5,192.638873536793,6
+"24","FEve","Study",1,-33.3170438356284,1
+"22","FEve","Mist_nets+Transect+Study",2,-30.6541650477496,2
+"23","FEve","Mist_nets+Study",2,-30.6541650477496,3
+"21","FEve","Mist nets+ Transect+Vocal+Study",3,-27.9486038868105,4
+"20","FEve","Mist nets+Transect+Vocal+Study",4,-24.924947972832,5
+"19","FEve","Point obs+Mist nets+Transect+Vocal+Study",5,-21.6927640647861,6
+"30","FDiv","Study",1,-82.2208587182532,1
+"28","FDiv","Mist_nets+Transect+Study",2,-79.6508502885272,2
+"29","FDiv","Mist_nets+Study",2,-79.5579799303744,3
+"27","FDiv","Mist nets+ Transect+Vocal+Study",3,-77.46771052008,4
+"26","FDiv","Mist nets+Transect+Vocal+Study",4,-74.4440546061015,5
+"25","FDiv","Point obs+Mist nets+Transect+Vocal+Study",5,-71.211870698054,6
+"36","FDis","Study",1,-11.7578822263649,1
+"34","FDis","Mist_nets+Transect+Study",2,-9.4417696685707,2
+"35","FDis","Mist_nets+Study",2,-9.16662167192417,3
+"33","FDis","Mist nets+ Transect+Vocal+Study",3,-6.60709224921587,4
+"32","FDis","Mist nets+Transect+Vocal+Study",4,-3.58343633523733,5
+"31","FDis","Point obs+Mist nets+Transect+Vocal+Study",5,-0.351252427191358,6

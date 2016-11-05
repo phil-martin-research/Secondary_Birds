@@ -18,24 +18,29 @@ library(influence.ME)
 library(ggcorrplot)
 
 
-#load in data
+#todo - tidy up this script
+
+#load data
 rm(list = ls())
 FD_comp<-read.csv("Data/FD_abun_summary_comp.csv")
-FD_comp<-FD_comp[,-c(13)]
+str(FD_comp)
+FD_comp<-FD_comp[,-c(11,13)]
 Sites<-read.csv("Data/Site_data.csv")
 FD_comp_sites<-merge(FD_comp,Sites,by="SiteID")
+head(FD_comp_sites)
+FD_comp_sites<-FD_comp_sites[,-c(16,18)]
 FD_comp_sites<-subset(FD_comp_sites,StudyID!=15&StudyID!=28&Disturbance_type!="Plantation"&Disturbance_type!="Fire")
 
 #before any analyses assess whether there is any correlation between the different measures of
 #diversity we are using here
-
 head(FD_comp_sites)
-FD_comp_sites_sub<- FD_comp_sites[,c(9:15)]
+FD_comp_sites_sub<- FD_comp_sites[,c(9:14)]
 head(FD_comp_sites_sub)
 cormat <- round(cor(FD_comp_sites_sub),2)
 ggcorr(FD_comp_sites_sub,label = T)
+#there is strong correlation between Spr, FDpg and Fric.
+#THis suggests that we should only use one of these metrics
 ggsave("Figures/Correlation_matrix.png",width=6,height=6,dpi=100,units="in")
-ggpairs(FD_comp_sites_sub)
 
 
 #create a variable to quantify the number of methods used
@@ -49,12 +54,9 @@ for (i in 1:nrow(FD_comp_sites)){
   FD_comp_sites_sub$Methods<-sum(Point,Mist,Tran,Vocal)
   FD_comp_sites_new<-rbind(FD_comp_sites_new,FD_comp_sites_sub)
 }
-
 FD_comp_sites<-FD_comp_sites_new
-head(FD_comp_sites)
-#species level metrics
 
-#test which arrangement of random effects is best
+#now test which arrangement of random effects is best
 AICc_summary<-NULL
 for (i in seq(grep("SpR", (colnames(FD_comp_sites))),grep("FDis", colnames(FD_comp_sites)))){
   #run null models to check which random effects structure has the best fit
@@ -82,19 +84,19 @@ AICc_summary<-AICc_summary[with(AICc_summary, order(Variable, AICc)), ]
 AICc_summary$Rank<-c(1,2,3,4,5,6)
 write.csv(AICc_summary,"Tables/Random_model_AICc.csv")
 
-#now look at the influence of data points when age is logged or unlogged
-#this is for the reviewers comments
+#########################################################################
+#following reviewers comments look at the influence of data points 
+#when age is logged or unlogged
+#########################################################################
+
+
+FD_comp_sites<-FD_comp_sites[complete.cases(FD_comp_sites),]
 M1<-lmer(SpR~1+log(Age)+(1|Study),data=FD_comp_sites,REML=F)
 M2<-lmer(SpR~1+Age+(1|Study),data=FD_comp_sites,REML=F)
-
 infl1 <- influence(M1, obs = TRUE)
 infl2 <- influence(M2, obs = TRUE)
-
-plot(infl1, which = "cook")
-plot(infl2, which = "cook")
-
-Log_plot<-qplot(FD_comp_sites$Age,cooks.distance(infl1))+geom_smooth(se=F,method="lm")+xlab("Time since last disturbance (Years)")+ylab("Cook's distance")+coord_cartesian(xlim=c(0,105),ylim=c(-0.01,0.25),expand = F)
-Unlogged_plot<-qplot(FD_comp_sites$Age,cooks.distance(infl2))+geom_smooth(se=F,method="lm")+xlab("Time since last disturbance (Years)")+ylab("Cook's distance")+coord_cartesian(xlim=c(0,105),ylim=c(-0.01,0.25),expand = F)
+Log_plot<-qplot(FD_comp_sites$Age,cooks.distance(infl1))+geom_smooth(se=F,method="lm")+xlab("Time since last disturbance (Years)")+ylab("Cook's distance")
+Unlogged_plot<-qplot(FD_comp_sites$Age,cooks.distance(infl2))+geom_smooth(se=F,method="lm")+xlab("Time since last disturbance (Years)")+ylab("Cook's distance")
 both_plots<-plot_grid(Unlogged_plot, Log_plot, labels = c("A", "B"))
 save_plot("figures/unlogged_log.png", both_plots,
          ncol = 2, # we're saving a grid plot of 2 columns
@@ -103,58 +105,53 @@ save_plot("figures/unlogged_log.png", both_plots,
          base_aspect_ratio = 1.3
 )
 
-#produce a loop that runs all models and then gives model selection tables and parameter estimates as an output
-#and then puts the residuals into dataframe for which a spatial correlogram is run
+
+##########################################################################
+#comparison of alternative models for species richness and functional ####
+#diversity measures#######################################################
+##########################################################################
+
+#This loop runs all alternative models and then produces 
+#a model selection tables and parameter estimates as an output
+
 FD_comp_sites_subset<-subset(FD_comp_sites,Disturbance_type!="")
-pdf("Figures/Abundance_residuals.pdf")
 model_sel_summary<-NULL
 for (i in seq(grep("SpR", (colnames(FD_comp_sites_subset))),grep("FDis", colnames(FD_comp_sites_subset)))){
   #run null models to check which random effects structure has the best fit
   M0<-lmer(FD_comp_sites_subset[[i]]~1+(1|Study),data=FD_comp_sites_subset,REML=F)
   M1<-lmer(FD_comp_sites_subset[[i]]~1+log(Age)+(1|Study),data=FD_comp_sites_subset,REML=F)
   M2<-lmer(FD_comp_sites_subset[[i]]~1+Disturbance_type+(1|Study),data=FD_comp_sites_subset,REML=F)
-  
   model_sel<-data.frame(Variable=names(FD_comp_sites_subset[i]),
                         x_var=c("Null model","log(Age)","Disturbance type"),
                         AICc=AICc(M0,M1,M2)$AICc)
   model_sel$delta<-(model_sel$AICc)-min(model_sel$AICc)
   model_sel$R2<-round(c(r.squaredGLMM(M0)[1],r.squaredGLMM(M1)[1],r.squaredGLMM(M2)[1]),2)
-  mod_resid<-data.frame(resids=c(resid(M0),resid(M1),resid(M2)),fitted=c(fitted(M0),fitted(M1),fitted(M2)),model=rep(x = c("M0","M1","M2"),each=38),title=names(FD_comp_sites_subset[i]))
-  Title<-names(FD_comp_sites_subset[i])
-  print(ggplot(mod_resid,aes(x=resids))+geom_histogram()+facet_wrap(~model)+ ggtitle(Title))
-  print(Resid_plots<-ggplot(mod_resid,aes(x=fitted,y=resids))+geom_point()+facet_wrap(~model)+ ggtitle(Title))
   model_sel_summary<-rbind(model_sel_summary,model_sel)
 }
-dev.off()
-
 
 write.csv(model_sel_summary,"Tables/model_sel_summary.csv")
 
-#variables that respond to age - SpR, FDis
-#variables that don't respond to age - FDpg, FDw,FRic, FEve , FDiv
+#model comparison shows that models inclduing disturbance never perform better than
+#those models containing age, or null models
+#Species richness and Functional dispersal respond to age, but everything else fits a null model
 
+################################################################
+#produce coefficients for the most parsimoniuous models#########
+################################################################
 
-#first look at variables that respond to age
 #Species richness
 M1_SPR<-lmer(SpR~log(Age)+(1|Study),data=FD_comp_sites_subset)
-summary(M1_SPR)
-r.squaredGLMM(M1_SPR)
-
 SpR_coefs <- data.frame(coef(summary(M1_SPR)))
 mixed(SpR~log(Age)+(1|Study),data=FD_comp_sites_subset,test.intercept =T)
-
-# use normal distribution to approximate p-value
-SpR_coefs$p.z <- 2 * (1 - pnorm(abs(coefs$t.value)))
+SpR_coefs$p.z<-c(0.03,0.09)
 SpR_coefs$variable<-"SpR"
 
 #FDis
 M1_FDis<-lmer(FDis~log(Age)+(1|Study),data=FD_comp_sites_subset)
-summary(M1_FDis)
-r.squaredGLMM(M1_FDis)
 FDiv_coefs <- data.frame(coef(summary(M1_FDis)))
-# use normal distribution to approximate p-value
-FDis_coefs$p.z <- 2 * (1 - pnorm(abs(coefs$t.value)))
-FDis_coefs$variable<-"FDiv"
+mixed(FDis~log(Age)+(1|Study),data=FD_comp_sites_subset,test.intercept =T)
+FDiv_coefs$p.z<-c(0.37,0.05)
+FDiv_coefs$variable<-"FDiv"
 
 #plot results
 new.data_FDis<-data.frame(Age=seq(min(FD_comp_sites_subset$Age),max(FD_comp_sites_subset$Age)))
@@ -184,17 +181,13 @@ FDis_P4<-FDis_P3+geom_ribbon(data=new.data_FDis,aes(x=Age,y=FDis,ymax=FDis+(2*SE
 #now look at variables that don't respond to age#
 #################################################
 
-#variables that don't respond to age - FDpg, FDw, FE, FDiv, Fric
+#variables that don't respond to age - FDpg, FE, FDiv, Fric
 head(FD_comp_sites_subset)
 coefs_summary<-NULL
-var_list<-c("FDpg","FRic","FEve", "FDiv")
+var_list<-c("FDpg","FRic","FEve", "FDis")
 for (i in 1:length(var_list)){
-  #i<-2
   j<-grep(var_list[i], colnames(FD_comp_sites_subset))
   M1<-lmer(FD_comp_sites_subset[[j]]~1+(1|Study),data=FD_comp_sites_subset)
-  print(var_list[i])
-  FD_comp_sites_subset$FDpg
-  
   coefs <- data.frame(coef(summary(M1)))
   coefs$p.z <- 2 * (1 - pnorm(abs(coefs$t.value)))
   coefs$variable<-var_list[i]
@@ -203,7 +196,7 @@ for (i in 1:length(var_list)){
 
 Coefs_summary<-rbind(coefs_summary,FDiv_coefs,SpR_coefs)
 
-coefs_summary$var2<-c("Functional \ndivergence \n(FDiv)","FDw","Functional \nEvenness \n(FEve)","Functional \nrichness \n(FRic)","Functional \nDiversity \n(FD)")
+coefs_summary$var2<-c("Functional \ndispersal \n(FDiv)","Functional \nEvenness \n(FEve)","Functional \nrichness \n(FRic)","Functional \nDiversity \n(FD)")
 
 write.csv(Coefs_summary,"Tables/Coefs_summary.csv")
 
@@ -238,26 +231,30 @@ for (i in 1:length(Un_study)){
 }
 
 
-#produce models of this relationship
-M0<-lmer(Prop_rich~1+(1|Study),data=SF_summary)
-M1<-lmer(Prop_rich~log(Age)+(1|Study),data=SF_summary)
+SF_summary2<-merge(SF_summary,Sites,by = "SiteID")
+SF_summary3<-subset(SF_summary2,StudyID!=15&StudyID!=28&Disturbance_type!="Plantation"&Disturbance_type!="Fire")
 
-AICc(M0,M1)
+
+#produce models of this relationship
+M0<-lmer(Prop_rich~1+(1|Study),data=SF_summary3)
+M1<-lmer(Prop_rich~log(Age)+(1|Study),data=SF_summary3)
+M2<-lmer(Prop_rich~Disturbance_type+(1|Study),data=SF_summary3)
+
+AICc(M0,M1,M2)
 summary(M1)
 
 r.squaredGLMM(M1)
 
 #plot results
-new.data<-data.frame(Age=seq(min(SF_summary$Age),max(SF_summary$Age),length.out = 1000))
+new.data<-data.frame(Age=seq(min(SF_summary3$Age),max(SF_summary3$Age),length.out = 1000))
 new.data$Prop_rich<-predict(M1,new.data,re.form=NA,se.fit=T)$fit
 new.data$SE<-predict(M1,new.data,re.form=NA,se.fit=T)$se.fit
 
 
-ForSpec_P1<-ggplot(SF_summary,aes(x=Age,y=Prop_rich))+geom_point(shape=1)+scale_x_log10()
+ForSpec_P1<-ggplot(SF_summary3,aes(x=Age,y=Prop_rich))+geom_point(shape=1)+scale_x_log10()
 ForSpec_P2<-ForSpec_P1+geom_line(data=new.data,aes(x=Age,y=Prop_rich),size=1)+xlab("Time since last disturbance (Years)")
 ForSpec_P3<-ForSpec_P2+geom_hline(yintercept=0,lty=2)+ylab("Relative secondary forest \nspecialist richness (response ratio)")
 ForSpec_P4<-ForSpec_P3+geom_ribbon(data=new.data,aes(x=Age,y=Prop_rich,ymax=Prop_rich+(2*SE),ymin=Prop_rich-(2*SE)),alpha=0.5)
-
 
 time_plots<-plot_grid(SPR_P4, ForSpec_P4,FDis_P4, labels = c("(a)", "(b)","(c)"), align = "h",ncol = 1)
 save_plot("Figures/time_plots.pdf", time_plots,
