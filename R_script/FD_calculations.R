@@ -99,10 +99,10 @@ str(FD_site_PF_Summary)
 
 
 SES_FD_summary<-merge(x=FD_site_SF_Summary[,c(1:8,ncol(FD_site_SF_Summary))],y=FD_site_PF_Summary[,c(1:8,ncol(FD_site_PF_Summary))],by=c("Study","Point_obs","Mist_nets","Transect","Vocal"))
-SES_FD_summary2<-SES_FD_summary[,-c(6,8,10:12)]
-names(SES_FD_summary2)<-c("study","Point_obs","Mist_nets","Transect","Vocal","Age","SES_Sec","SES_P")
+head(SES_FD_summary)
+SES_FD_summary2<-SES_FD_summary[,-c(8,10:12)]
+names(SES_FD_summary2)<-c("study","Point_obs","Mist_nets","Transect","Vocal","SiteID","Age","SES_Sec","SES_P")
 SES_FD_summary2$SES_Diff<-SES_FD_summary2$SES_Sec-SES_FD_summary2$SES_P
-
 write.csv(SES_FD_summary2,"Data/SES_summary.csv",row.names=F)
 
 SES_FD_summary2<-read.csv("Data/SES_summary.csv")
@@ -128,8 +128,33 @@ for (i in 1:nrow(Unique_study)){
   SF_sub<-(SF_sub[,c(1:16)])
   PF_sub<-subset(FD_site_PF_Summary,Study==Unique_study[i,2])
   PF_sub<-(PF_sub[,c(1:16)])
-  SF_prop_sub<-data.frame(SF_sub[,c(1:8)],log(SF_sub[,c(9:ncol(SF_sub))]/PF_sub[,c(9:ncol(PF_sub))]))
+  SF_prop_sub<-data.frame(SF_sub[,c(1:8)],log(SF_sub[,c(9:ncol(SF_sub))]/PF_sub[,c(9:ncol(PF_sub))]),
+                          P_SpR=PF_sub$SpR,P_FDpg=PF_sub$FDpg,P_FRic=PF_sub$FRic,P_FEve=PF_sub$FEve,
+                          P_FDiv=PF_sub$FDiv,P_FDis=PF_sub$FDis)
   SF_prop_summary<-rbind(SF_prop_sub,SF_prop_summary)
 }
 
 write.csv(SF_prop_summary,"Data/FD_abun_summary_comp.csv",row.names=F)
+
+
+M_SpR<-lmer(SpR~log(Age)*P_SpR+(1|Study),data=SF_prop_summary)
+r.squaredGLMM(M_SpR)
+M_SpR<-lmer(FDpg~log(Age)*P_FDpg+(1|Study),data=SF_prop_summary)
+r.squaredGLMM(M_SpR)
+M_SpR<-lmer(FRic~log(Age)*P_FRic+(1|Study),data=SF_prop_summary)
+r.squaredGLMM(M_SpR)
+M_SpR<-lmer(FEve~log(Age)*P_FEve+(1|Study),data=SF_prop_summary)
+r.squaredGLMM(M_SpR)
+M_SpR<-lmer(FDiv~log(Age)*P_FDiv+(1|Study),data=SF_prop_summary)
+r.squaredGLMM(M_SpR)
+M_SpR<-lmer(FDis~log(Age)*P_FDis+(1|Study),data=SF_prop_summary)
+r.squaredGLMM(M_SpR)
+
+
+
+ggplot(SF_prop_summary,aes(x=P_SpR,y=SpR))+geom_point()
+ggplot(SF_prop_summary,aes(x=P_FDpg,y=FDpg))+geom_point()
+ggplot(SF_prop_summary,aes(x=P_FRic,y=FRic))+geom_point()+scale_x_log10()
+ggplot(SF_prop_summary,aes(x=P_FEve,y=FEve))+geom_point()
+ggplot(SF_prop_summary,aes(x=P_FDiv,y=FDiv))+geom_point()
+ggplot(SF_prop_summary,aes(x=P_FDis,y=FDis))+geom_point()

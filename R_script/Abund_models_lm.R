@@ -169,13 +169,13 @@ theme_set(theme_cowplot())
 SPR_P1<-ggplot(FD_comp_sites_subset,aes(x=Age,y=SpR))+geom_point(shape=1)+scale_x_log10()
 SPR_P2<-SPR_P1+geom_line(data=new.data_SpR,aes(x=Age,y=SpR),size=1)+xlab("Time since last disturbance (Years)")
 SPR_P3<-SPR_P2+geom_hline(yintercept=0,lty=2)+ylab("Relative secondary forest \nspecies richness (response ratio)")
-SPR_P4<-SPR_P3+geom_ribbon(data=new.data_SpR,aes(x=Age,y=SpR,ymax=SpR+(2*SE),ymin=SpR-(2*SE)),alpha=0.5)
+SPR_P4<-SPR_P3+geom_ribbon(data=new.data_SpR,aes(x=Age,y=SpR,ymax=SpR+(2*SE),ymin=SpR-(2*SE)),alpha=0.2)
 
 #plot for FDis
 FDis_P1<-ggplot(FD_comp_sites_subset,aes(x=Age,y=FDis))+geom_point(shape=1)+scale_x_log10()
 FDis_P2<-FDis_P1+geom_line(data=new.data_FDis,aes(x=Age,y=FDis),size=1)+xlab("Time since last disturbance (Years)")
 FDis_P3<-FDis_P2+geom_hline(yintercept=0,lty=2)+ylab("Relative secondary forest \nfunctional dispersion (response ratio)")
-FDis_P4<-FDis_P3+geom_ribbon(data=new.data_FDis,aes(x=Age,y=FDis,ymax=FDis+(2*SE),ymin=FDis-(2*SE)),alpha=0.5)
+FDis_P4<-FDis_P3+geom_ribbon(data=new.data_FDis,aes(x=Age,y=FDis,ymax=FDis+(2*SE),ymin=FDis-(2*SE)),alpha=0.2)
 
 #################################################
 #now look at variables that don't respond to age#
@@ -196,7 +196,7 @@ for (i in 1:length(var_list)){
 
 Coefs_summary<-rbind(coefs_summary,FDiv_coefs,SpR_coefs)
 
-coefs_summary$var2<-c("Functional \ndispersal \n(FDiv)","Functional \nEvenness \n(FEve)","Functional \nrichness \n(FRic)","Functional \nDiversity \n(FD)")
+coefs_summary$var2<-c("Functional \ndivergence \n(FDiv)","Functional \nEvenness \n(FEve)","Functional \nrichness \n(FRic)","Functional \nDiversity \n(FD)")
 
 write.csv(Coefs_summary,"Tables/Coefs_summary.csv")
 
@@ -254,7 +254,7 @@ new.data$SE<-predict(M1,new.data,re.form=NA,se.fit=T)$se.fit
 ForSpec_P1<-ggplot(SF_summary3,aes(x=Age,y=Prop_rich))+geom_point(shape=1)+scale_x_log10()
 ForSpec_P2<-ForSpec_P1+geom_line(data=new.data,aes(x=Age,y=Prop_rich),size=1)+xlab("Time since last disturbance (Years)")
 ForSpec_P3<-ForSpec_P2+geom_hline(yintercept=0,lty=2)+ylab("Relative secondary forest \nspecialist richness (response ratio)")
-ForSpec_P4<-ForSpec_P3+geom_ribbon(data=new.data,aes(x=Age,y=Prop_rich,ymax=Prop_rich+(2*SE),ymin=Prop_rich-(2*SE)),alpha=0.5)
+ForSpec_P4<-ForSpec_P3+geom_ribbon(data=new.data,aes(x=Age,y=Prop_rich,ymax=Prop_rich+(2*SE),ymin=Prop_rich-(2*SE)),alpha=0.2)
 
 time_plots<-plot_grid(SPR_P4, ForSpec_P4,FDis_P4, labels = c("(a)", "(b)","(c)"), align = "h",ncol = 1)
 save_plot("Figures/time_plots.pdf", time_plots,
